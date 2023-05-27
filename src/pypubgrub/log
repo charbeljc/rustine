@@ -1,0 +1,302 @@
+XXX (nx 0.0.7)
+XXX: available_versions: nx
+XXX: get-dependencies nx 0.0.7
+!!! <Version("4")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4]}
+!!! <Version("8")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [8]}
+XXX: available_versions: clap
+XXX=> Versions: [|<Version("0.7")>|]
+XXX: get-dependencies clap 0.7
+result: None
+reqs: []
+XXX: available_versions: ipython
+XXX=> Versions: [|<Version("8.13.2")>|, |<Version("8.13.1")>|, |<Version("8.12.2")>|, |<Version("8.12.1")>|, |<Version("8.12.0")>|, |<Version("8.11.0")>|, |<Version("8.10.0")>|, |<Version("8.9.0")>|, |<Version("8.8.0")>|, |<Version("8.7.0")>|, |<Version("8.6.0")>|, |<Version("8.5.0")>|, |<Version("8.4.0")>|, |<Version("8.3.0")>|, |<Version("8.2.0")>|, |<Version("8.1.1")>|, |<Version("8.1.0")>|, |<Version("8.0.1")>|, |<Version("8.0.0")>|, |<Version("8.0.0rc1")>|, |<Version("8.0.0b1")>|, |<Version("8.0.0a1")>|, |<Version("7.34.0")>|, |<Version("7.33.0")>|, |<Version("7.32.0")>|, |<Version("7.31.1")>|, |<Version("7.31.0")>|, |<Version("7.30.1")>|, |<Version("7.29.0")>|, |<Version("7.28.0")>|, |<Version("7.27.0")>|, |<Version("7.26.0")>|, |<Version("7.25.0")>|, |<Version("7.24.1")>|, |<Version("7.24.0")>|, |<Version("7.23.1")>|, |<Version("7.23.0")>|, |<Version("7.22.0")>|, |<Version("7.21.0")>|, |<Version("7.20.0")>|, |<Version("7.19.0")>|, |<Version("7.18.1")>|, |<Version("7.18.0")>|, |<Version("7.17.0")>|, |<Version("7.16.3")>|, |<Version("7.16.2")>|, |<Version("7.16.1")>|, |<Version("7.16.0")>|, |<Version("7.15.0")>|, |<Version("7.14.0")>|, |<Version("7.13.0")>|, |<Version("7.12.0")>|, |<Version("7.11.1")>|, |<Version("7.11.0")>|, |<Version("7.10.2")>|, |<Version("7.10.1")>|, |<Version("7.10.0")>|, |<Version("7.9.0")>|, |<Version("7.8.0")>|, |<Version("7.7.0")>|, |<Version("7.6.1")>|, |<Version("7.6.0")>|, |<Version("7.5.0")>|, |<Version("7.4.0")>|, |<Version("7.3.0")>|, |<Version("7.2.0")>|, |<Version("7.1.1")>|, |<Version("7.0.1")>|, |<Version("7.0.0")>|, |<Version("7.0.0rc1")>|, |<Version("7.0.0b1")>|, |<Version("6.5.0")>|, |<Version("6.4.0")>|, |<Version("6.3.1")>|, |<Version("6.3.0")>|, |<Version("6.2.1")>|, |<Version("6.2.0")>|, |<Version("6.1.0")>|, |<Version("6.0.0")>|, |<Version("6.0.0rc1")>|, |<Version("5.10.0")>|, |<Version("5.9.0")>|, |<Version("5.8.0")>|, |<Version("5.7.0")>|, |<Version("5.6.0")>|, |<Version("5.5.0")>|, |<Version("5.4.1")>|, |<Version("5.4.0")>|, |<Version("5.3.0")>|, |<Version("5.2.2")>|, |<Version("5.2.1")>|, |<Version("5.2.0")>|, |<Version("5.1.0")>|, |<Version("5.0.0")>|, |<Version("5.0.0rc1")>|, |<Version("5.0.0b4")>|, |<Version("5.0.0b3")>|, |<Version("5.0.0b2")>|, |<Version("5.0.0b1")>|, |<Version("4.2.1")>|, |<Version("4.2.0")>|, |<Version("4.1.2")>|, |<Version("4.1.1")>|, |<Version("4.1.0")>|, |<Version("4.1.0rc2")>|, |<Version("4.1.0rc1")>|, |<Version("4.0.3")>|, |<Version("4.0.2")>|, |<Version("4.0.1")>|, |<Version("4.0.0")>|, |<Version("4.0.0b1")>|, |<Version("3.2.3")>|, |<Version("3.2.2")>|, |<Version("3.2.1")>|, |<Version("3.2.0")>|, |<Version("3.1.0")>|, |<Version("3.0.0")>|, |<Version("2.4.1")>|, |<Version("2.4.0")>|, |<Version("2.3.1")>|, |<Version("2.3.0")>|, |<Version("2.2.0")>|, |<Version("2.1.0")>|, |<Version("2.0.0")>|, |<Version("1.2.1")>|, |<Version("1.2.0")>|, |<Version("1.1.0")>|, |<Version("1.0.0")>|, |<Version("0.13.2")>|, |<Version("0.13.1")>|, |<Version("0.13")>|, |<Version("0.12.1")>|, |<Version("0.12")>|, |<Version("0.11")>|, |<Version("0.10.2")>|, |<Version("0.10.1")>|, |<Version("0.10")>|]
+XXX: get-dependencies ipython 8.0.0
+result: ['setuptools (>=18.5)', 'jedi (>=0.16)', 'black', 'decorator', 'pickleshare', 'traitlets (>=5)', 'prompt-toolkit (!=3.0.0,!=3.0.1,<3.1.0,>=2.0.0)', 'pygments', 'backcall', 'stack-data', 'matplotlib-inline', 'pexpect (>4.3) ; sys_platform != "win32"', 'appnope ; sys_platform == "darwin"', 'colorama ; sys_platform == "win32"', "Sphinx (>=1.3) ; extra == 'all'", "curio ; extra == 'all'", "ipykernel ; extra == 'all'", "ipyparallel ; extra == 'all'", "ipywidgets ; extra == 'all'", "matplotlib (!=3.2.0) ; extra == 'all'", "nbconvert ; extra == 'all'", "nbformat ; extra == 'all'", "notebook ; extra == 'all'", "numpy (>=1.19) ; extra == 'all'", "pandas ; extra == 'all'", "pygments ; extra == 'all'", "pytest ; extra == 'all'", "pytest-asyncio ; extra == 'all'", "qtconsole ; extra == 'all'", "testpath ; extra == 'all'", "trio ; extra == 'all'", "Sphinx (>=1.3) ; extra == 'doc'", "ipykernel ; extra == 'kernel'", "nbconvert ; extra == 'nbconvert'", "nbformat ; extra == 'nbformat'", "notebook ; extra == 'notebook'", "ipywidgets ; extra == 'notebook'", "ipyparallel ; extra == 'parallel'", "qtconsole ; extra == 'qtconsole'", "pytest ; extra == 'test'", "pytest-asyncio ; extra == 'test'", "testpath ; extra == 'test'", "pygments ; extra == 'test'", "pytest ; extra == 'test_extra'", "testpath ; extra == 'test_extra'", "curio ; extra == 'test_extra'", "matplotlib (!=3.2.0) ; extra == 'test_extra'", "nbformat ; extra == 'test_extra'", "numpy (>=1.19) ; extra == 'test_extra'", "pandas ; extra == 'test_extra'", "pygments ; extra == 'test_extra'", "trio ; extra == 'test_extra'"]
+reqs: ["setuptools >=18.5", "jedi >=0.16", "black", "decorator", "pickleshare", "traitlets >=5", "prompt-toolkit !=3.0.0, !=3.0.1, <3.1.0, >=2.0.0", "pygments", "backcall", "stack-data", "matplotlib-inline", "pexpect >4.3 ; sys_platform != 'win32'", "appnope ; sys_platform == 'darwin'", "colorama ; sys_platform == 'win32'", "Sphinx >=1.3 ; extra == 'all'", "curio ; extra == 'all'", "ipykernel ; extra == 'all'", "ipyparallel ; extra == 'all'", "ipywidgets ; extra == 'all'", "matplotlib !=3.2.0 ; extra == 'all'", "nbconvert ; extra == 'all'", "nbformat ; extra == 'all'", "notebook ; extra == 'all'", "numpy >=1.19 ; extra == 'all'", "pandas ; extra == 'all'", "pygments ; extra == 'all'", "pytest ; extra == 'all'", "pytest-asyncio ; extra == 'all'", "qtconsole ; extra == 'all'", "testpath ; extra == 'all'", "trio ; extra == 'all'", "Sphinx >=1.3 ; extra == 'doc'", "ipykernel ; extra == 'kernel'", "nbconvert ; extra == 'nbconvert'", "nbformat ; extra == 'nbformat'", "notebook ; extra == 'notebook'", "ipywidgets ; extra == 'notebook'", "ipyparallel ; extra == 'parallel'", "qtconsole ; extra == 'qtconsole'", "pytest ; extra == 'test'", "pytest-asyncio ; extra == 'test'", "testpath ; extra == 'test'", "pygments ; extra == 'test'", "pytest ; extra == 'test_extra'", "testpath ; extra == 'test_extra'", "curio ; extra == 'test_extra'", "matplotlib !=3.2.0 ; extra == 'test_extra'", "nbformat ; extra == 'test_extra'", "numpy >=1.19 ; extra == 'test_extra'", "pandas ; extra == 'test_extra'", "pygments ; extra == 'test_extra'", "trio ; extra == 'test_extra'"]
+!!! <Version("18.5")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [18, 5]}
+!!! <Version("0.16")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 16]}
+!!! <Version("5")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [5]}
+!!! <Version("3.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0, 0]}
+!!! <Version("3.0.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0, 1]}
+!!! <Version("3.1.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 1, 0]}
+!!! <Version("2.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 0, 0]}
+!!! <Version("4.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 3]}
+!!! <Version("1.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 3]}
+!!! <Version("3.2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 2, 0]}
+!!! <Version("1.19")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 19]}
+!!! <Version("1.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 3]}
+!!! <Version("3.2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 2, 0]}
+!!! <Version("1.19")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 19]}
+XXX: available_versions: pickleshare
+XXX=> Versions: [|<Version("0.7.5")>|, |<Version("0.7.4")>|, |<Version("0.7.3")>|, |<Version("0.7.2")>|, |<Version("0.7.1")>|, |<Version("0.7")>|, |<Version("0.6")>|, |<Version("0.5")>|, |<Version("0.4")>|, |<Version("0.3")>|, |<Version("0.2")>|, |<Version("0.1")>|]
+XXX: get-dependencies pickleshare 0.7.5
+result: ['pathlib2; python_version in "2.6 2.7 3.2 3.3"']
+reqs: ["pathlib2 ; python_version in '2.6 2.7 3.2 3.3'"]
+XXX: available_versions: pathlib2
+XXX=> Versions: [|<Version("2.3.7.post1")>|, |<Version("2.3.6")>|, |<Version("2.3.5")>|, |<Version("2.3.4")>|, |<Version("2.3.3")>|, |<Version("2.3.2")>|, |<Version("2.3.0")>|, |<Version("2.2.1")>|, |<Version("2.2.0")>|, |<Version("2.1.0")>|, |<Version("2.0.1")>|, |<Version("2.0")>|]
+XXX: get-dependencies pathlib2 2.3.7.post1
+result: ['six', 'scandir ; python_version<"3.5"', 'typing ; python_version<"3.5"']
+reqs: ["six", "scandir ; python_version < '3.5'", "typing ; python_version < '3.5'"]
+XXX: available_versions: pandas
+XXX=> Versions: [|<Version("2.0.1")>|, |<Version("2.0.0")>|, |<Version("2.0.0rc1")>|, |<Version("2.0.0rc0")>|, |<Version("1.5.3")>|, |<Version("1.5.2")>|, |<Version("1.5.1")>|, |<Version("1.5.0")>|, |<Version("1.5.0rc0")>|, |<Version("1.4.4")>|, |<Version("1.4.3")>|, |<Version("1.4.2")>|, |<Version("1.4.1")>|, |<Version("1.4.0")>|, |<Version("1.4.0rc0")>|, |<Version("1.3.5")>|, |<Version("1.3.4")>|, |<Version("1.3.3")>|, |<Version("1.3.2")>|, |<Version("1.3.1")>|, |<Version("1.3.0")>|, |<Version("1.2.5")>|, |<Version("1.2.4")>|, |<Version("1.2.3")>|, |<Version("1.2.2")>|, |<Version("1.2.1")>|, |<Version("1.2.0")>|, |<Version("1.1.5")>|, |<Version("1.1.4")>|, |<Version("1.1.3")>|, |<Version("1.1.2")>|, |<Version("1.1.1")>|, |<Version("1.1.0")>|, |<Version("1.0.5")>|, |<Version("1.0.4")>|, |<Version("1.0.3")>|, |<Version("1.0.2")>|, |<Version("1.0.1")>|, |<Version("1.0.0")>|, |<Version("0.25.3")>|, |<Version("0.25.2")>|, |<Version("0.25.1")>|, |<Version("0.25.0")>|, |<Version("0.24.2")>|, |<Version("0.24.1")>|, |<Version("0.24.0")>|, |<Version("0.23.4")>|, |<Version("0.23.3")>|, |<Version("0.23.2")>|, |<Version("0.23.1")>|, |<Version("0.23.0")>|, |<Version("0.22.0")>|, |<Version("0.21.1")>|, |<Version("0.21.0")>|, |<Version("0.20.3")>|, |<Version("0.20.2")>|, |<Version("0.20.1")>|, |<Version("0.20.0")>|, |<Version("0.19.2")>|, |<Version("0.19.1")>|, |<Version("0.19.0")>|, |<Version("0.18.1")>|, |<Version("0.18.0")>|, |<Version("0.17.1")>|, |<Version("0.17.0")>|, |<Version("0.16.2")>|, |<Version("0.16.1")>|, |<Version("0.16.0")>|, |<Version("0.15.2")>|, |<Version("0.15.1")>|, |<Version("0.15.0")>|, |<Version("0.14.1")>|, |<Version("0.14.0")>|, |<Version("0.13.1")>|, |<Version("0.13.0")>|, |<Version("0.12.0")>|, |<Version("0.11.0")>|, |<Version("0.10.1")>|, |<Version("0.10.0")>|, |<Version("0.9.1")>|, |<Version("0.9.0")>|, |<Version("0.8.1")>|, |<Version("0.8.0")>|, |<Version("0.7.3")>|, |<Version("0.7.2")>|, |<Version("0.7.1")>|, |<Version("0.7.0")>|, |<Version("0.6.1")>|, |<Version("0.6.0")>|, |<Version("0.5.0")>|, |<Version("0.4.3")>|, |<Version("0.4.2")>|, |<Version("0.4.1")>|, |<Version("0.4.0")>|, |<Version("0.3.0")>|, |<Version("0.2")>|, |<Version("0.1")>|]
+XXX: get-dependencies pandas 2.0.1
+result: ['python-dateutil (>=2.8.2)', 'pytz (>=2020.1)', 'tzdata (>=2022.1)', 'numpy (>=1.20.3) ; python_version < "3.10"', 'numpy (>=1.21.0) ; python_version >= "3.10"', 'numpy (>=1.23.2) ; python_version >= "3.11"', "beautifulsoup4 (>=4.9.3) ; extra == 'all'", "bottleneck (>=1.3.2) ; extra == 'all'", "brotlipy (>=0.7.0) ; extra == 'all'", "fastparquet (>=0.6.3) ; extra == 'all'", "fsspec (>=2021.07.0) ; extra == 'all'", "gcsfs (>=2021.07.0) ; extra == 'all'", "html5lib (>=1.1) ; extra == 'all'", "hypothesis (>=6.34.2) ; extra == 'all'", "jinja2 (>=3.0.0) ; extra == 'all'", "lxml (>=4.6.3) ; extra == 'all'", "matplotlib (>=3.6.1) ; extra == 'all'", "numba (>=0.53.1) ; extra == 'all'", "numexpr (>=2.7.3) ; extra == 'all'", "odfpy (>=1.4.1) ; extra == 'all'", "openpyxl (>=3.0.7) ; extra == 'all'", "pandas-gbq (>=0.15.0) ; extra == 'all'", "psycopg2 (>=2.8.6) ; extra == 'all'", "pyarrow (>=7.0.0) ; extra == 'all'", "pymysql (>=1.0.2) ; extra == 'all'", "PyQt5 (>=5.15.1) ; extra == 'all'", "pyreadstat (>=1.1.2) ; extra == 'all'", "pytest (>=7.0.0) ; extra == 'all'", "pytest-xdist (>=2.2.0) ; extra == 'all'", "pytest-asyncio (>=0.17.0) ; extra == 'all'", "python-snappy (>=0.6.0) ; extra == 'all'", "pyxlsb (>=1.0.8) ; extra == 'all'", "qtpy (>=2.2.0) ; extra == 'all'", "scipy (>=1.7.1) ; extra == 'all'", "s3fs (>=2021.08.0) ; extra == 'all'", "SQLAlchemy (>=1.4.16) ; extra == 'all'", "tables (>=3.6.1) ; extra == 'all'", "tabulate (>=0.8.9) ; extra == 'all'", "xarray (>=0.21.0) ; extra == 'all'", "xlrd (>=2.0.1) ; extra == 'all'", "xlsxwriter (>=1.4.3) ; extra == 'all'", "zstandard (>=0.15.2) ; extra == 'all'", "s3fs (>=2021.08.0) ; extra == 'aws'", "PyQt5 (>=5.15.1) ; extra == 'clipboard'", "qtpy (>=2.2.0) ; extra == 'clipboard'", "brotlipy (>=0.7.0) ; extra == 'compression'", "python-snappy (>=0.6.0) ; extra == 'compression'", "zstandard (>=0.15.2) ; extra == 'compression'", "scipy (>=1.7.1) ; extra == 'computation'", "xarray (>=0.21.0) ; extra == 'computation'", "odfpy (>=1.4.1) ; extra == 'excel'", "openpyxl (>=3.0.7) ; extra == 'excel'", "pyxlsb (>=1.0.8) ; extra == 'excel'", "xlrd (>=2.0.1) ; extra == 'excel'", "xlsxwriter (>=1.4.3) ; extra == 'excel'", "pyarrow (>=7.0.0) ; extra == 'feather'", "fsspec (>=2021.07.0) ; extra == 'fss'", "gcsfs (>=2021.07.0) ; extra == 'gcp'", "pandas-gbq (>=0.15.0) ; extra == 'gcp'", "tables (>=3.6.1) ; extra == 'hdf5'", "beautifulsoup4 (>=4.9.3) ; extra == 'html'", "html5lib (>=1.1) ; extra == 'html'", "lxml (>=4.6.3) ; extra == 'html'", "SQLAlchemy (>=1.4.16) ; extra == 'mysql'", "pymysql (>=1.0.2) ; extra == 'mysql'", "jinja2 (>=3.0.0) ; extra == 'output_formatting'", "tabulate (>=0.8.9) ; extra == 'output_formatting'", "pyarrow (>=7.0.0) ; extra == 'parquet'", "bottleneck (>=1.3.2) ; extra == 'performance'", "numba (>=0.53.1) ; extra == 'performance'", "numexpr (>=2.7.1) ; extra == 'performance'", "matplotlib (>=3.6.1) ; extra == 'plot'", "SQLAlchemy (>=1.4.16) ; extra == 'postgresql'", "psycopg2 (>=2.8.6) ; extra == 'postgresql'", "pyreadstat (>=1.1.2) ; extra == 'spss'", "SQLAlchemy (>=1.4.16) ; extra == 'sql-other'", "hypothesis (>=6.34.2) ; extra == 'test'", "pytest (>=7.0.0) ; extra == 'test'", "pytest-xdist (>=2.2.0) ; extra == 'test'", "pytest-asyncio (>=0.17.0) ; extra == 'test'", "lxml (>=4.6.3) ; extra == 'xml'"]
+reqs: ["python-dateutil >=2.8.2", "pytz >=2020.1", "tzdata >=2022.1", "numpy >=1.20.3 ; python_version < '3.10'", "numpy >=1.21.0 ; python_version >= '3.10'", "numpy >=1.23.2 ; python_version >= '3.11'", "beautifulsoup4 >=4.9.3 ; extra == 'all'", "bottleneck >=1.3.2 ; extra == 'all'", "brotlipy >=0.7.0 ; extra == 'all'", "fastparquet >=0.6.3 ; extra == 'all'", "fsspec >=2021.7.0 ; extra == 'all'", "gcsfs >=2021.7.0 ; extra == 'all'", "html5lib >=1.1 ; extra == 'all'", "hypothesis >=6.34.2 ; extra == 'all'", "jinja2 >=3.0.0 ; extra == 'all'", "lxml >=4.6.3 ; extra == 'all'", "matplotlib >=3.6.1 ; extra == 'all'", "numba >=0.53.1 ; extra == 'all'", "numexpr >=2.7.3 ; extra == 'all'", "odfpy >=1.4.1 ; extra == 'all'", "openpyxl >=3.0.7 ; extra == 'all'", "pandas-gbq >=0.15.0 ; extra == 'all'", "psycopg2 >=2.8.6 ; extra == 'all'", "pyarrow >=7.0.0 ; extra == 'all'", "pymysql >=1.0.2 ; extra == 'all'", "PyQt5 >=5.15.1 ; extra == 'all'", "pyreadstat >=1.1.2 ; extra == 'all'", "pytest >=7.0.0 ; extra == 'all'", "pytest-xdist >=2.2.0 ; extra == 'all'", "pytest-asyncio >=0.17.0 ; extra == 'all'", "python-snappy >=0.6.0 ; extra == 'all'", "pyxlsb >=1.0.8 ; extra == 'all'", "qtpy >=2.2.0 ; extra == 'all'", "scipy >=1.7.1 ; extra == 'all'", "s3fs >=2021.8.0 ; extra == 'all'", "SQLAlchemy >=1.4.16 ; extra == 'all'", "tables >=3.6.1 ; extra == 'all'", "tabulate >=0.8.9 ; extra == 'all'", "xarray >=0.21.0 ; extra == 'all'", "xlrd >=2.0.1 ; extra == 'all'", "xlsxwriter >=1.4.3 ; extra == 'all'", "zstandard >=0.15.2 ; extra == 'all'", "s3fs >=2021.8.0 ; extra == 'aws'", "PyQt5 >=5.15.1 ; extra == 'clipboard'", "qtpy >=2.2.0 ; extra == 'clipboard'", "brotlipy >=0.7.0 ; extra == 'compression'", "python-snappy >=0.6.0 ; extra == 'compression'", "zstandard >=0.15.2 ; extra == 'compression'", "scipy >=1.7.1 ; extra == 'computation'", "xarray >=0.21.0 ; extra == 'computation'", "odfpy >=1.4.1 ; extra == 'excel'", "openpyxl >=3.0.7 ; extra == 'excel'", "pyxlsb >=1.0.8 ; extra == 'excel'", "xlrd >=2.0.1 ; extra == 'excel'", "xlsxwriter >=1.4.3 ; extra == 'excel'", "pyarrow >=7.0.0 ; extra == 'feather'", "fsspec >=2021.7.0 ; extra == 'fss'", "gcsfs >=2021.7.0 ; extra == 'gcp'", "pandas-gbq >=0.15.0 ; extra == 'gcp'", "tables >=3.6.1 ; extra == 'hdf5'", "beautifulsoup4 >=4.9.3 ; extra == 'html'", "html5lib >=1.1 ; extra == 'html'", "lxml >=4.6.3 ; extra == 'html'", "SQLAlchemy >=1.4.16 ; extra == 'mysql'", "pymysql >=1.0.2 ; extra == 'mysql'", "jinja2 >=3.0.0 ; extra == 'output_formatting'", "tabulate >=0.8.9 ; extra == 'output_formatting'", "pyarrow >=7.0.0 ; extra == 'parquet'", "bottleneck >=1.3.2 ; extra == 'performance'", "numba >=0.53.1 ; extra == 'performance'", "numexpr >=2.7.1 ; extra == 'performance'", "matplotlib >=3.6.1 ; extra == 'plot'", "SQLAlchemy >=1.4.16 ; extra == 'postgresql'", "psycopg2 >=2.8.6 ; extra == 'postgresql'", "pyreadstat >=1.1.2 ; extra == 'spss'", "SQLAlchemy >=1.4.16 ; extra == 'sql-other'", "hypothesis >=6.34.2 ; extra == 'test'", "pytest >=7.0.0 ; extra == 'test'", "pytest-xdist >=2.2.0 ; extra == 'test'", "pytest-asyncio >=0.17.0 ; extra == 'test'", "lxml >=4.6.3 ; extra == 'xml'"]
+!!! <Version("2.8.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 8, 2]}
+!!! <Version("2020.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2020, 1]}
+!!! <Version("2022.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2022, 1]}
+!!! <Version("1.20.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 20, 3]}
+!!! <Version("1.21.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 21, 0]}
+!!! <Version("1.23.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 23, 2]}
+!!! <Version("4.9.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 9, 3]}
+!!! <Version("1.3.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 3, 2]}
+!!! <Version("0.7.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 7, 0]}
+!!! <Version("0.6.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 6, 3]}
+!!! <Version("2021.7.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2021, 7, 0]}
+!!! <Version("2021.7.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2021, 7, 0]}
+!!! <Version("1.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 1]}
+!!! <Version("6.34.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [6, 34, 2]}
+!!! <Version("3.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0, 0]}
+!!! <Version("4.6.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 6, 3]}
+!!! <Version("3.6.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 6, 1]}
+!!! <Version("0.53.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 53, 1]}
+!!! <Version("2.7.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 7, 3]}
+!!! <Version("1.4.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 1]}
+!!! <Version("3.0.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0, 7]}
+!!! <Version("0.15.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 15, 0]}
+!!! <Version("2.8.6")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 8, 6]}
+!!! <Version("7.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [7, 0, 0]}
+!!! <Version("1.0.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 0, 2]}
+!!! <Version("5.15.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [5, 15, 1]}
+!!! <Version("1.1.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 1, 2]}
+!!! <Version("7.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [7, 0, 0]}
+!!! <Version("2.2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 2, 0]}
+!!! <Version("0.17.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 17, 0]}
+!!! <Version("0.6.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 6, 0]}
+!!! <Version("1.0.8")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 0, 8]}
+!!! <Version("2.2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 2, 0]}
+!!! <Version("1.7.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 7, 1]}
+!!! <Version("2021.8.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2021, 8, 0]}
+!!! <Version("1.4.16")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 16]}
+!!! <Version("3.6.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 6, 1]}
+!!! <Version("0.8.9")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 8, 9]}
+!!! <Version("0.21.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 21, 0]}
+!!! <Version("2.0.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 0, 1]}
+!!! <Version("1.4.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 3]}
+!!! <Version("0.15.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 15, 2]}
+!!! <Version("2021.8.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2021, 8, 0]}
+!!! <Version("5.15.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [5, 15, 1]}
+!!! <Version("2.2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 2, 0]}
+!!! <Version("0.7.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 7, 0]}
+!!! <Version("0.6.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 6, 0]}
+!!! <Version("0.15.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 15, 2]}
+!!! <Version("1.7.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 7, 1]}
+!!! <Version("0.21.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 21, 0]}
+!!! <Version("1.4.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 1]}
+!!! <Version("3.0.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0, 7]}
+!!! <Version("1.0.8")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 0, 8]}
+!!! <Version("2.0.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 0, 1]}
+!!! <Version("1.4.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 3]}
+!!! <Version("7.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [7, 0, 0]}
+!!! <Version("2021.7.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2021, 7, 0]}
+!!! <Version("2021.7.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2021, 7, 0]}
+!!! <Version("0.15.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 15, 0]}
+!!! <Version("3.6.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 6, 1]}
+!!! <Version("4.9.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 9, 3]}
+!!! <Version("1.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 1]}
+!!! <Version("4.6.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 6, 3]}
+!!! <Version("1.4.16")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 16]}
+!!! <Version("1.0.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 0, 2]}
+!!! <Version("3.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0, 0]}
+!!! <Version("0.8.9")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 8, 9]}
+!!! <Version("7.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [7, 0, 0]}
+!!! <Version("1.3.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 3, 2]}
+!!! <Version("0.53.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 53, 1]}
+!!! <Version("2.7.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 7, 1]}
+!!! <Version("3.6.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 6, 1]}
+!!! <Version("1.4.16")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 16]}
+!!! <Version("2.8.6")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 8, 6]}
+!!! <Version("1.1.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 1, 2]}
+!!! <Version("1.4.16")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 4, 16]}
+!!! <Version("6.34.2")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [6, 34, 2]}
+!!! <Version("7.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [7, 0, 0]}
+!!! <Version("2.2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 2, 0]}
+!!! <Version("0.17.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 17, 0]}
+!!! <Version("4.6.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 6, 3]}
+XXX: available_versions: lxml
+XXX=> Versions: [|<Version("4.9.2")>|, |<Version("4.9.1")>|, |<Version("4.9.0")>|, |<Version("4.8.0")>|, |<Version("4.7.1")>|, |<Version("4.6.5")>|, |<Version("4.6.4")>|, |<Version("4.6.3")>|, |<Version("4.6.2")>|, |<Version("4.6.1")>|, |<Version("4.6.0")>|, |<Version("4.5.2")>|, |<Version("4.5.1")>|, |<Version("4.5.0")>|, |<Version("4.4.3")>|, |<Version("4.4.2")>|, |<Version("4.4.1")>|, |<Version("4.4.0")>|, |<Version("4.3.5")>|, |<Version("4.3.4")>|, |<Version("4.3.3")>|, |<Version("4.3.2")>|, |<Version("4.3.1")>|, |<Version("4.3.0")>|, |<Version("4.2.6")>|, |<Version("4.2.5")>|, |<Version("4.2.4")>|, |<Version("4.2.3")>|, |<Version("4.2.2")>|, |<Version("4.2.1")>|, |<Version("4.2.0")>|, |<Version("4.1.1")>|, |<Version("4.1.0")>|, |<Version("4.0.0")>|, |<Version("3.8.0")>|, |<Version("3.7.3")>|, |<Version("3.7.2")>|, |<Version("3.7.1")>|, |<Version("3.7.0")>|, |<Version("3.6.4")>|, |<Version("3.6.3")>|, |<Version("3.6.2")>|, |<Version("3.6.1")>|, |<Version("3.6.0")>|, |<Version("3.5.0")>|, |<Version("3.5.0b1")>|, |<Version("3.4.4")>|, |<Version("3.4.3")>|, |<Version("3.4.2")>|, |<Version("3.4.1")>|, |<Version("3.4.0")>|, |<Version("3.3.6")>|, |<Version("3.3.5")>|, |<Version("3.3.4")>|, |<Version("3.3.3")>|, |<Version("3.3.2")>|, |<Version("3.3.1")>|, |<Version("3.3.0")>|, |<Version("3.3.0b5")>|, |<Version("3.3.0b4")>|, |<Version("3.3.0b3")>|, |<Version("3.3.0b2")>|, |<Version("3.3.0b1")>|, |<Version("3.2.5")>|, |<Version("3.2.4")>|, |<Version("3.2.3")>|, |<Version("3.2.2")>|, |<Version("3.2.1")>|, |<Version("3.2.0")>|, |<Version("3.1.2")>|, |<Version("3.1.1")>|, |<Version("3.1.0")>|, |<Version("3.1b1")>|, |<Version("3.0.2")>|, |<Version("3.0.1")>|, |<Version("3.0")>|, |<Version("2.3.6")>|, |<Version("2.3.5")>|, |<Version("2.3.4")>|, |<Version("2.3.3")>|, |<Version("2.3.2")>|, |<Version("2.3.1")>|, |<Version("2.3")>|, |<Version("2.3b1")>|, |<Version("2.2.8")>|, |<Version("2.2.7")>|, |<Version("2.2.6")>|, |<Version("2.2.5")>|, |<Version("2.2.4")>|, |<Version("2.2.3")>|, |<Version("2.2.2")>|, |<Version("2.2.1")>|, |<Version("2.2")>|, |<Version("2.2b4")>|, |<Version("2.2b3")>|, |<Version("2.2b2")>|, |<Version("2.2b1")>|, |<Version("2.2a1")>|, |<Version("2.1.5")>|, |<Version("2.1.4")>|, |<Version("2.1.3")>|, |<Version("2.1.2")>|, |<Version("2.1.1")>|, |<Version("2.1")>|, |<Version("2.1b3")>|, |<Version("2.1b2")>|, |<Version("2.1b1")>|, |<Version("2.1a1")>|, |<Version("2.0.11")>|, |<Version("2.0.10")>|, |<Version("2.0.9")>|, |<Version("2.0.8")>|, |<Version("2.0.7")>|, |<Version("2.0.6")>|, |<Version("2.0.5")>|, |<Version("2.0.4")>|, |<Version("2.0.3")>|, |<Version("2.0.2")>|, |<Version("2.0.1")>|, |<Version("2.0")>|, |<Version("2.0b2")>|, |<Version("2.0b1")>|, |<Version("2.0a6")>|, |<Version("2.0a5")>|, |<Version("2.0a4")>|, |<Version("2.0a3")>|, |<Version("2.0a2")>|, |<Version("2.0a1")>|, |<Version("1.3.6")>|, |<Version("1.3.5")>|, |<Version("1.3.4")>|, |<Version("1.3.3")>|, |<Version("1.3.2")>|, |<Version("1.3")>|, |<Version("1.3b0")>|, |<Version("1.2.1")>|, |<Version("1.2")>|, |<Version("1.1.2")>|, |<Version("1.1.1")>|, |<Version("1.1")>|, |<Version("1.1b0")>|, |<Version("1.1a0")>|, |<Version("1.0.4")>|, |<Version("1.0.3")>|, |<Version("1.0.2")>|, |<Version("1.0.1")>|, |<Version("1.0")>|, |<Version("1.0b0")>|, |<Version("0.9.2")>|, |<Version("0.9.1")>|, |<Version("0.9")>|]
+XXX: get-dependencies lxml 4.9.2
+result: ["cssselect (>=0.7) ; extra == 'cssselect'", "html5lib ; extra == 'html5'", "BeautifulSoup4 ; extra == 'htmlsoup'", "Cython (>=0.29.7) ; extra == 'source'"]
+reqs: ["cssselect >=0.7 ; extra == 'cssselect'", "html5lib ; extra == 'html5'", "BeautifulSoup4 ; extra == 'htmlsoup'", "Cython >=0.29.7 ; extra == 'source'"]
+!!! <Version("0.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 7]}
+!!! <Version("0.29.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 29, 7]}
+XXX: available_versions: jinja2
+XXX=> Versions: [|<Version("3.1.2")>|, |<Version("3.1.1")>|, |<Version("3.1.0")>|, |<Version("3.0.3")>|, |<Version("3.0.2")>|, |<Version("3.0.1")>|, |<Version("3.0.0")>|, |<Version("3.0.0rc2")>|, |<Version("3.0.0rc1")>|, |<Version("3.0.0a1")>|, |<Version("2.11.3")>|, |<Version("2.11.2")>|, |<Version("2.11.1")>|, |<Version("2.11.0")>|, |<Version("2.10.3")>|, |<Version("2.10.2")>|, |<Version("2.10.1")>|, |<Version("2.10")>|, |<Version("2.9.6")>|, |<Version("2.9.5")>|, |<Version("2.9.4")>|, |<Version("2.9.3")>|, |<Version("2.9.2")>|, |<Version("2.9.1")>|, |<Version("2.9")>|, |<Version("2.8.1")>|, |<Version("2.8")>|, |<Version("2.7.3")>|, |<Version("2.7.2")>|, |<Version("2.7.1")>|, |<Version("2.7")>|, |<Version("2.6")>|, |<Version("2.5.5")>|, |<Version("2.5.4")>|, |<Version("2.5.3")>|, |<Version("2.5.2")>|, |<Version("2.5.1")>|, |<Version("2.5")>|, |<Version("2.4.1")>|, |<Version("2.4")>|, |<Version("2.3.1")>|, |<Version("2.3")>|, |<Version("2.2.1")>|, |<Version("2.2")>|, |<Version("2.1.1")>|, |<Version("2.1")>|, |<Version("2.0")>|, |<Version("2.0rc1")>|]
+XXX: get-dependencies jinja2 3.1.2
+result: ['MarkupSafe (>=2.0)', "Babel (>=2.7) ; extra == 'i18n'"]
+reqs: ["MarkupSafe >=2.0", "Babel >=2.7 ; extra == 'i18n'"]
+!!! <Version("2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 0]}
+!!! <Version("2.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 7]}
+XXX: available_versions: Babel
+XXX=> Versions: [|<Version("2.12.1")>|, |<Version("2.12.0")>|, |<Version("2.11.0")>|, |<Version("2.10.3")>|, |<Version("2.10.2")>|, |<Version("2.10.1")>|, |<Version("2.10.0")>|, |<Version("2.9.1")>|, |<Version("2.9.0")>|, |<Version("2.8.1")>|, |<Version("2.8.0")>|, |<Version("2.7.0")>|, |<Version("2.6.0")>|, |<Version("2.5.3")>|, |<Version("2.5.2")>|, |<Version("2.5.1")>|, |<Version("2.5.0")>|, |<Version("2.4.0")>|, |<Version("2.3.4")>|, |<Version("2.3.3")>|, |<Version("2.3.2")>|, |<Version("2.3.1")>|, |<Version("2.3.0")>|, |<Version("2.2.0")>|, |<Version("2.1.1")>|, |<Version("2.0")>|, |<Version("1.3")>|, |<Version("1.2")>|, |<Version("1.1")>|, |<Version("1.0")>|, |<Version("0.9.6")>|]
+XXX: get-dependencies Babel 2.12.1
+result: ['pytz (>=2015.7) ; python_version < "3.9"']
+reqs: ["pytz >=2015.7 ; python_version < '3.9'"]
+!!! <Version("2015.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2015, 7]}
+XXX: available_versions: Sphinx
+XXX=> Versions: [|<Version("7.0.1")>|, |<Version("7.0.0")>|, |<Version("7.0.0rc1")>|, |<Version("6.2.1")>|, |<Version("6.2.0")>|, |<Version("6.1.3")>|, |<Version("6.1.2")>|, |<Version("6.1.1")>|, |<Version("6.1.0")>|, |<Version("6.0.1")>|, |<Version("6.0.0")>|, |<Version("6.0.0b2")>|, |<Version("6.0.0b1")>|, |<Version("5.3.0")>|, |<Version("5.2.3")>|, |<Version("5.2.2")>|, |<Version("5.2.1")>|, |<Version("5.2.0.post0")>|, |<Version("5.2.0")>|, |<Version("5.1.1")>|, |<Version("5.1.0")>|, |<Version("5.0.2")>|, |<Version("5.0.1")>|, |<Version("5.0.0")>|, |<Version("5.0.0b1")>|, |<Version("4.5.0")>|, |<Version("4.4.0")>|, |<Version("4.3.2")>|, |<Version("4.3.1")>|, |<Version("4.3.0")>|, |<Version("4.2.0")>|, |<Version("4.1.2")>|, |<Version("4.1.1")>|, |<Version("4.1.0")>|, |<Version("4.0.3")>|, |<Version("4.0.2")>|, |<Version("4.0.1")>|, |<Version("4.0.0")>|, |<Version("4.0.0b2")>|, |<Version("4.0.0b1")>|, |<Version("3.5.4")>|, |<Version("3.5.3")>|, |<Version("3.5.2")>|, |<Version("3.5.1")>|, |<Version("3.5.0")>|, |<Version("3.4.3")>|, |<Version("3.4.2")>|, |<Version("3.4.1")>|, |<Version("3.4.0")>|, |<Version("3.3.1")>|, |<Version("3.3.0")>|, |<Version("3.2.1")>|, |<Version("3.2.0")>|, |<Version("3.1.2")>|, |<Version("3.1.1")>|, |<Version("3.1.0")>|, |<Version("3.0.4")>|, |<Version("3.0.3")>|, |<Version("3.0.2")>|, |<Version("3.0.1")>|, |<Version("3.0.0")>|, |<Version("3.0.0b1")>|, |<Version("2.4.5")>|, |<Version("2.4.4")>|, |<Version("2.4.3")>|, |<Version("2.4.2")>|, |<Version("2.4.1")>|, |<Version("2.4.0")>|, |<Version("2.3.1")>|, |<Version("2.3.0")>|, |<Version("2.2.2")>|, |<Version("2.2.1")>|, |<Version("2.2.0")>|, |<Version("2.1.2")>|, |<Version("2.1.1")>|, |<Version("2.1.0")>|, |<Version("2.0.1")>|, |<Version("2.0.0")>|, |<Version("2.0.0b2")>|, |<Version("2.0.0b1")>|, |<Version("1.8.6")>|, |<Version("1.8.5")>|, |<Version("1.8.4")>|, |<Version("1.8.3")>|, |<Version("1.8.2")>|, |<Version("1.8.1")>|, |<Version("1.8.0")>|, |<Version("1.8.0b1")>|, |<Version("1.7.9")>|, |<Version("1.7.8")>|, |<Version("1.7.7")>|, |<Version("1.7.6")>|, |<Version("1.7.5")>|, |<Version("1.7.4")>|, |<Version("1.7.3")>|, |<Version("1.7.2")>|, |<Version("1.7.1")>|, |<Version("1.7.0")>|, |<Version("1.7.0b2")>|, |<Version("1.7.0b1")>|, |<Version("1.6.7")>|, |<Version("1.6.6")>|, |<Version("1.6.5")>|, |<Version("1.6.4")>|, |<Version("1.6.3")>|, |<Version("1.6.2")>|, |<Version("1.6.1")>|, |<Version("1.6b3")>|, |<Version("1.6b2")>|, |<Version("1.6b1")>|, |<Version("1.5.6")>|, |<Version("1.5.5")>|, |<Version("1.5.4")>|, |<Version("1.5.3")>|, |<Version("1.5.2")>|, |<Version("1.5.1")>|, |<Version("1.5")>|, |<Version("1.5b1")>|, |<Version("1.5a2")>|, |<Version("1.5a1")>|, |<Version("1.4.9")>|, |<Version("1.4.8")>|, |<Version("1.4.7")>|, |<Version("1.4.6")>|, |<Version("1.4.5")>|, |<Version("1.4.4")>|, |<Version("1.4.3")>|, |<Version("1.4.2")>|, |<Version("1.4.1")>|, |<Version("1.4")>|, |<Version("1.4b1")>|, |<Version("1.4a1")>|, |<Version("1.3.6")>|, |<Version("1.3.5")>|, |<Version("1.3.4")>|, |<Version("1.3.3")>|, |<Version("1.3.2")>|, |<Version("1.3.1")>|, |<Version("1.3")>|, |<Version("1.3b3")>|, |<Version("1.3b2")>|, |<Version("1.3b1")>|, |<Version("1.2.3")>|, |<Version("1.2.2")>|, |<Version("1.2.1")>|, |<Version("1.2")>|, |<Version("1.2b3")>|, |<Version("1.2b2")>|, |<Version("1.2b1")>|, |<Version("1.1.3")>|, |<Version("1.1.2")>|, |<Version("1.1.1")>|, |<Version("1.1")>|, |<Version("1.0.8")>|, |<Version("1.0.7")>|, |<Version("1.0.6")>|, |<Version("1.0.5")>|, |<Version("1.0.4")>|, |<Version("1.0.3")>|, |<Version("1.0.2")>|, |<Version("1.0.1")>|, |<Version("1.0")>|, |<Version("1.0b2")>|, |<Version("1.0b1")>|, |<Version("0.6.7")>|, |<Version("0.6.6")>|, |<Version("0.6.5")>|, |<Version("0.6.4")>|, |<Version("0.6.3")>|, |<Version("0.6.2")>|, |<Version("0.6.1")>|, |<Version("0.6")>|, |<Version("0.6b1")>|, |<Version("0.5.2")>|, |<Version("0.5.2b1")>|, |<Version("0.5.1")>|, |<Version("0.5")>|, |<Version("0.4.3")>|, |<Version("0.4.2")>|, |<Version("0.4.1")>|, |<Version("0.4")>|, |<Version("0.3")>|, |<Version("0.2")>|, |<Version("0.1.61950")>|, |<Version("0.1.61945")>|, |<Version("0.1.61843")>|, |<Version("0.1.61798")>|, |<Version("0.1.61611")>|]
+XXX: get-dependencies Sphinx 7.0.1
+result: ['sphinxcontrib-applehelp', 'sphinxcontrib-devhelp', 'sphinxcontrib-jsmath', 'sphinxcontrib-htmlhelp>=2.0.0', 'sphinxcontrib-serializinghtml>=1.1.5', 'sphinxcontrib-qthelp', 'Jinja2>=3.0', 'Pygments>=2.13', 'docutils>=0.18.1,<0.21', 'snowballstemmer>=2.0', 'babel>=2.9', 'alabaster>=0.7,<0.8', 'imagesize>=1.3', 'requests>=2.25.0', 'packaging>=21.0', "importlib-metadata>=4.8; python_version < '3.10'", "colorama>=0.4.5; sys_platform == 'win32'", 'sphinxcontrib-websupport ; extra == "docs"', 'flake8>=3.5.0 ; extra == "lint"', 'flake8-simplify ; extra == "lint"', 'isort ; extra == "lint"', 'ruff ; extra == "lint"', 'mypy>=0.990 ; extra == "lint"', 'sphinx-lint ; extra == "lint"', 'docutils-stubs ; extra == "lint"', 'types-requests ; extra == "lint"', 'pytest>=4.6 ; extra == "test"', 'html5lib ; extra == "test"', 'cython ; extra == "test"', 'filelock ; extra == "test"']
+reqs: ["sphinxcontrib-applehelp", "sphinxcontrib-devhelp", "sphinxcontrib-jsmath", "sphinxcontrib-htmlhelp >=2.0.0", "sphinxcontrib-serializinghtml >=1.1.5", "sphinxcontrib-qthelp", "Jinja2 >=3.0", "Pygments >=2.13", "docutils >=0.18.1, <0.21", "snowballstemmer >=2.0", "babel >=2.9", "alabaster >=0.7, <0.8", "imagesize >=1.3", "requests >=2.25.0", "packaging >=21.0", "importlib-metadata >=4.8 ; python_version < '3.10'", "colorama >=0.4.5 ; sys_platform == 'win32'", "sphinxcontrib-websupport ; extra == 'docs'", "flake8 >=3.5.0 ; extra == 'lint'", "flake8-simplify ; extra == 'lint'", "isort ; extra == 'lint'", "ruff ; extra == 'lint'", "mypy >=0.990 ; extra == 'lint'", "sphinx-lint ; extra == 'lint'", "docutils-stubs ; extra == 'lint'", "types-requests ; extra == 'lint'", "pytest >=4.6 ; extra == 'test'", "html5lib ; extra == 'test'", "cython ; extra == 'test'", "filelock ; extra == 'test'"]
+!!! <Version("2.0.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 0, 0]}
+!!! <Version("1.1.5")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 1, 5]}
+!!! <Version("3.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 0]}
+!!! <Version("2.13")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 13]}
+!!! <Version("0.18.1")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 18, 1]}
+!!! <Version("0.21")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 21]}
+!!! <Version("2.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 0]}
+!!! <Version("2.9")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 9]}
+!!! <Version("0.7")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 7]}
+!!! <Version("0.8")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 8]}
+!!! <Version("1.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [1, 3]}
+!!! <Version("2.25.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [2, 25, 0]}
+!!! <Version("21.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [21, 0]}
+!!! <Version("4.8")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 8]}
+!!! <Version("0.4.5")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 4, 5]}
+!!! <Version("3.5.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [3, 5, 0]}
+!!! <Version("0.990")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 990]}
+!!! <Version("4.6")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [4, 6]}
+XXX: available_versions: snowballstemmer
+XXX=> Versions: [|<Version("2.2.0")>|, |<Version("2.1.0")>|, |<Version("2.0.0")>|, |<Version("1.9.1")>|, |<Version("1.9.0")>|, |<Version("1.2.1")>|, |<Version("1.2.0")>|, |<Version("1.1.0")>|, |<Version("1.0.0")>|, |<Version("0.1.0")>|]
+XXX: get-dependencies snowballstemmer 2.2.0
+result: None
+reqs: []
+XXX: available_versions: isort
+XXX=> Versions: [|<Version("6.0.0b2")>|, |<Version("6.0.0b1")>|, |<Version("6.0.0a1")>|, |<Version("5.12.0")>|, |<Version("5.11.5")>|, |<Version("5.11.4")>|, |<Version("5.11.3")>|, |<Version("5.11.2")>|, |<Version("5.11.1")>|, |<Version("5.11.0")>|, |<Version("5.10.1")>|, |<Version("5.10.0")>|, |<Version("5.9.3")>|, |<Version("5.9.2")>|, |<Version("5.9.1")>|, |<Version("5.9.0")>|, |<Version("5.8.0")>|, |<Version("5.7.0")>|, |<Version("5.6.4")>|, |<Version("5.6.3")>|, |<Version("5.6.2")>|, |<Version("5.6.1")>|, |<Version("5.6.0")>|, |<Version("5.5.5")>|, |<Version("5.5.4")>|, |<Version("5.5.3")>|, |<Version("5.5.2")>|, |<Version("5.5.1")>|, |<Version("5.5.0")>|, |<Version("5.4.2")>|, |<Version("5.4.1")>|, |<Version("5.4.0")>|, |<Version("5.3.2")>|, |<Version("5.3.1")>|, |<Version("5.3.0")>|, |<Version("5.2.2")>|, |<Version("5.2.1")>|, |<Version("5.2.0")>|, |<Version("5.1.4")>|, |<Version("5.1.3")>|, |<Version("5.1.2")>|, |<Version("5.1.1")>|, |<Version("5.1.0")>|, |<Version("5.0.9")>|, |<Version("5.0.8")>|, |<Version("5.0.7")>|, |<Version("5.0.6")>|, |<Version("5.0.5")>|, |<Version("5.0.4")>|, |<Version("5.0.3")>|, |<Version("5.0.2")>|, |<Version("5.0.1")>|, |<Version("5.0.0")>|, |<Version("4.3.21")>|, |<Version("4.3.20")>|, |<Version("4.3.19")>|, |<Version("4.3.18")>|, |<Version("4.3.17")>|, |<Version("4.3.16")>|, |<Version("4.3.15")>|, |<Version("4.3.14")>|, |<Version("4.3.13")>|, |<Version("4.3.12")>|, |<Version("4.3.11")>|, |<Version("4.3.10")>|, |<Version("4.3.9")>|, |<Version("4.3.8")>|, |<Version("4.3.7")>|, |<Version("4.3.6")>|, |<Version("4.3.5")>|, |<Version("4.3.4")>|, |<Version("4.3.3")>|, |<Version("4.3.2")>|, |<Version("4.3.1")>|, |<Version("4.3.0")>|, |<Version("4.2.15")>|, |<Version("4.2.14")>|, |<Version("4.2.13")>|, |<Version("4.2.12")>|, |<Version("4.2.11")>|, |<Version("4.2.9")>|, |<Version("4.2.8")>|, |<Version("4.2.5")>|, |<Version("4.2.4")>|, |<Version("4.2.3")>|, |<Version("4.2.2")>|, |<Version("4.2.1")>|, |<Version("4.2.0")>|, |<Version("4.1.2")>|, |<Version("4.1.1")>|, |<Version("4.1.0")>|, |<Version("4.0.0")>|, |<Version("3.9.6")>|, |<Version("3.9.5")>|, |<Version("3.9.4")>|, |<Version("3.9.3")>|, |<Version("3.9.2")>|, |<Version("3.9.1")>|, |<Version("3.9.0")>|, |<Version("3.8.3")>|, |<Version("3.8.2")>|, |<Version("3.8.1")>|, |<Version("3.8.0")>|, |<Version("3.7.2")>|, |<Version("3.7.1")>|, |<Version("3.7.0")>|, |<Version("3.6.2")>|, |<Version("3.6.1")>|, |<Version("3.6.0")>|, |<Version("3.5.0")>|, |<Version("3.4.2")>|, |<Version("3.4.1")>|, |<Version("3.4.0")>|, |<Version("3.3.1")>|, |<Version("3.3.0")>|, |<Version("3.2.0")>|, |<Version("3.1.2")>|, |<Version("3.1.1")>|, |<Version("3.1.0")>|, |<Version("3.0.0")>|, |<Version("2.6.3")>|, |<Version("2.6.2")>|, |<Version("2.6.1")>|, |<Version("2.6.0")>|, |<Version("2.5.0")>|, |<Version("2.4.1")>|, |<Version("2.4.0")>|, |<Version("2.3.0")>|, |<Version("2.2.1")>|, |<Version("2.2.0")>|, |<Version("2.1.0")>|, |<Version("2.0.1")>|, |<Version("2.0.0")>|, |<Version("1.3.2")>|, |<Version("1.3.1")>|, |<Version("1.3.0")>|, |<Version("1.2.5")>|, |<Version("1.2.3")>|, |<Version("1.2.2")>|, |<Version("1.2.0")>|, |<Version("1.0.1")>|, |<Version("1.0.0")>|]
+XXX: get-dependencies isort 6.0.0b2
+result: ['pipreqs ; extra == "pipfile-deprecated-finder" or extra == "requirements-deprecated-finder"', 'requirementslib ; extra == "pipfile-deprecated-finder"', 'pip-api ; extra == "requirements-deprecated-finder"', 'colorama (>=0.4.3,<0.5.0) ; extra == "colors"', 'setuptools ; extra == "plugins"']
+reqs: ["pipreqs ; extra == 'pipfile-deprecated-finder' or extra == 'requirements-deprecated-finder'", "requirementslib ; extra == 'pipfile-deprecated-finder'", "pip-api ; extra == 'requirements-deprecated-finder'", "colorama >=0.4.3, <0.5.0 ; extra == 'colors'", "setuptools ; extra == 'plugins'"]
+!!! <Version("0.4.3")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 4, 3]}
+!!! <Version("0.5.0")>
+!!! {'dev': None, 'epoch': 0, 'post': None, 'pre': None, 'release': [0, 5, 0]}
