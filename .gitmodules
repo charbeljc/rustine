@@ -1,0 +1,3 @@
+[submodule "src/pubgrub-pyo3"]
+	path = src/pubgrub-pyo3
+	url = git@github.com:charbeljc/pubgrub-pyo3.git
