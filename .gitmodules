@@ -1,3 +1,15 @@
 [submodule "src/pubgrub-pyo3"]
 	path = src/pubgrub-pyo3
 	url = git@github.com:charbeljc/pubgrub-pyo3.git
+[submodule "src/pep440-rs"]
+	path = src/pep440-rs
+	url = git@github.com:charbeljc/pep440-rs.git
+	branch = pubgrub
+[submodule "src/pep508_rs"]
+	path = src/pep508_rs
+	url = git@github.com:charbeljc/pep508_rs.git
+	branch = pubgrub
+[submodule "src/monotrail-resolve"]
+	path = src/monotrail-resolve
+	url = git@github.com:charbeljc/monotrail-resolve.git
+	branch = wip
