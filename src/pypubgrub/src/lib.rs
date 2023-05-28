@@ -3,7 +3,9 @@ use pep508_rs::{MarkerEnvironment, Requirement};
 
 use pubgrub::error::PubGrubError;
 use pubgrub::range::Range;
-use pubgrub::solver::{resolve, Dependencies, DependencyProvider};
+use pubgrub::solver::{
+    choose_package_with_fewest_versions, resolve, Dependencies, DependencyProvider,
+};
 use pubgrub::version::Version;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
@@ -143,11 +145,11 @@ impl PyDependencyProvider {
             let fun = self.proxy.getattr(py, "available_versions").unwrap();
             let res = fun.call1(py, (package.proxy.clone(),)).unwrap();
             let res = res.downcast::<PyList>(py).expect("expected a list");
-            let versions: Vec<PyVersion> = res
+            let versions: Vec<_> = res
                 .into_iter()
                 .map(|e| {
-                    let ee = e.extract::<PyVersion>().unwrap();
-                    ee
+                    let ee = e.extract::<&str>().unwrap();
+                    PyVersion::parse(ee).unwrap()
                 })
                 .collect();
             versions
@@ -171,20 +173,16 @@ fn version_specifier_to_pubgrub(version_specifier: &PyList) -> Range<PyVersion> 
             "<" => Range::strictly_lower_than(version),
             ">" => Range::higher_than(version.bump()),
             "!=" => {
-                let a = Range::strictly_lower_than(version.clone());
                 let b = Range::higher_than(version.bump());
+                let a = Range::strictly_lower_than(version);
                 a.union(&b)
             }
             "~=" => {
-                let release: Vec<usize> = version.0.release.clone();
-                if release.len() != 2 {
-                    todo!("error: ~=")
-                };
-                let vb = VersionBase::from_release(vec![release[0], release[1] + 1]);
-                let vb = PyVersion(vb);
+                let release = &version.0.release;
+                let vc = PyVersion(VersionBase::from_release(vec![release[0], release[1] + 1]));
 
-                let a = Range::higher_than(version.clone());
-                let b = Range::strictly_lower_than(vb);
+                let a = Range::higher_than(version);
+                let b = Range::strictly_lower_than(vc);
                 a.intersection(&b)
             }
             other => {
@@ -216,13 +214,20 @@ impl DependencyProvider<PyPackage, PyVersion> for PyDependencyProvider {
         &self,
         mut potential_packages: impl Iterator<Item = (T, U)>,
     ) -> Result<(T, Option<PyVersion>), Box<dyn std::error::Error>> {
-        let (package, range) = potential_packages.next().unwrap();
-
-        let version = self
-            .available_versions(package.borrow())
-            .find(|v| range.borrow().contains(v));
-        Ok((package, version))
+        Ok(pubgrub::solver::choose_package_with_fewest_versions(
+            |p| self.available_versions(p),
+            potential_packages,
+        ))
     }
+
+    //     choose_package_with_fewest_versions
+    //     let (package, range) = potential_packages.next().unwrap();
+
+    //     let version = self
+    //         .available_versions(package.borrow())
+    //         .find(|v| range.borrow().contains(v));
+    //     Ok((package, version))
+    // }
 
     fn get_dependencies(
         &self,
@@ -270,13 +275,13 @@ fn py_resolve(
     py: Python<'_>,
     dependency_provider: Py<PyAny>,
     package: Py<PyAny>,
-    version: Py<PyAny>,
+    version: &str,
 ) -> PyResult<Py<PyAny>> {
     let dependency_provider = PyDependencyProvider {
         proxy: dependency_provider,
     };
     let package = PyPackage { proxy: package };
-    let version = version.extract::<PyVersion>(py)?;
+    let version = PyVersion::parse(version)?;
 
     match resolve(&dependency_provider, package, version) {
         Ok(res) => Python::with_gil(|py| {
