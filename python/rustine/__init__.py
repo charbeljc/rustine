@@ -192,7 +192,7 @@ class DependencyProvider:
         version_spec = dep.version_or_url
         type_ = type(version_spec)
         if type_ is str:
-            logger.warning(f"XXX: package: {package} vs: {version_spec}")
+            logger.warning(f"TODO: package: {package} vs: {version_spec}")
         elif type_ is list:
             version_spec = [vs2tuple(vs) for vs in version_spec or []]
             item = Package(name, frozenset(extras or [])), version_spec
@@ -280,7 +280,6 @@ def normalize_requirement(req):
 # start = time.time()
 # from pep440_rs import PreRelease
 def transform(a, v):
-    # print(f"XXX transform: {a!r}, {v!r}")
     if a == "pre" and type(v) == tuple and len(v) == 2:
         k, i = v
         return str(k), i
@@ -354,7 +353,6 @@ import tomli
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--spinner/--no-spinner", is_flag=True)
 def main(requirements, index_url, debug, verbose, spinner):
-    print(f"XXX: {requirements!r}", file=sys.stderr)
     if debug or verbose:
         logging.basicConfig(level=logging.INFO)
 
