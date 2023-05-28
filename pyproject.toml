@@ -5,13 +5,25 @@ description = "Add a short description here"
 authors = [
     { name = "Charbel Jacquin", email = "charbeljacquin@gmail.com" }
 ]
-dependencies = []
+dependencies = [
+  "progress"
+, "httpx"
+, "click"
+, "resolve_prototype @ file:///home/rebelcat/Hack/Rust/rustine/src/monotrail-resolve"
+, "pubgrub @ file:///home/rebelcat/Hack/Rust/rustine/src/pubgrub-pyo3", "json_stream~=2.3.0", "distlib~=0.3.6"]
 readme = "README.md"
-requires-python = ">= 3.11"
+requires-python = ">= 3.10"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
 
 [tool.rye]
 managed = true
+dev-dependencies = ["ipython~=8.13.2"]
+
+[tool.setuptools.packages.find]
+where = ["python"] 
+
+[project.scripts]
+rustine = "rustine:main"

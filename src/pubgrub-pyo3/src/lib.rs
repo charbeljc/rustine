@@ -1,4 +1,5 @@
-use pep440_rs::{PyVersion, Version as VersionBase};
+use pep440_rs::{PyVersion, Version as VersionBase, VersionSpecifiers, VersionSpecifier};
+use pep508_rs::modern::VersionSpecifierModern;
 use pep508_rs::{MarkerEnvironment, Requirement};
 
 use pubgrub::error::PubGrubError;
@@ -179,11 +180,9 @@ fn version_specifier_to_pubgrub(version_specifier: &PyList) -> Range<PyVersion> 
             }
             "~=" => {
                 let release = &version.0.release;
-                let vc = PyVersion(VersionBase::from_release(vec![release[0], release[1] + 1]));
+                let vnext  = PyVersion(VersionBase::from_release(vec![release[0], release[1] + 1]));
 
-                let a = Range::higher_than(version);
-                let b = Range::strictly_lower_than(vc);
-                a.intersection(&b)
+                Range::between(version, vnext)
             }
             other => {
                 eprintln!("unsupported operator: {other}");
@@ -306,45 +305,20 @@ fn py_resolve(
         }
     }
 }
-pub use pypi_types;
-pub use pypi_types::core_metadata;
-use pypi_types::pypi_metadata;
-use pypi_types::pypi_releases;
-
 /// A Python module implemented in Rust.
 #[pymodule]
-fn pypubgrub(py: Python, m: &PyModule) -> PyResult<()> {
+fn _pubgrub(_py: Python, m: &PyModule) -> PyResult<()> {
     #[allow(unused_must_user)]
     {
         pyo3_log::try_init();
     }
     m.add_class::<MarkerEnvironment>()?;
+    m.add_class::<VersionSpecifiers>()?;
+    m.add_class::<VersionSpecifier>()?;
+    // m.add_class::<VersionSpecifierModern>()?;
     m.add_class::<Requirement>()?;
     m.add_class::<PyVersion>()?;
     m.add_function(wrap_pyfunction!(py_resolve, m)?)?;
-
-    let module = PyModule::new(py, "pypi_types")?;
-    pypi_types::pypi_types(py, module)?;
-    m.add_submodule(module)?;
-    // let core_metadata_module = PyModule::new(py, "core_metadata")?;
-    // core_metadata::core_metadata(py, core_metadata_module)?;
-    // module.add_submodule(core_metadata_module)?;
-
-    // let pypi_metadata_module = PyModule::new(py, "pypi_metadata")?;
-    // pypi_metadata::pypi_metadata(py, pypi_metadata_module)?;
-    // module.add_submodule(pypi_metadata_module)?;
-
-    // let pypi_releases_module = PyModule::new(py, "pypi_releases")?;
-    // pypi_releases::pypi_releases(py, pypi_releases_module)?;
-    // module.add_submodule(pypi_releases_module)?;
-
-    // let pep508_rs_module = PyModule::new(py, "pep508_rs")?;
-    // pep508_rs::python_module(py, pep508_rs_module)?;
-    // module.add_submodule(pep508_rs_module)?;
-
-    // let pep440_rs_module = PyModule::new(py, "pep440_rs")?;
-    // pep440_rs::python_module(py, pep440_rs_module)?;
-    // module.add_submodule(pep440_rs_module)?;
 
     Ok(())
 }

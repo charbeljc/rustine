@@ -19,10 +19,6 @@ import httpx
 from httpx import AsyncClient, AsyncHTTPTransport
 import logging
 
-logging.basicConfig(level=logging.INFO)
-# from pypubgrub.pypi_types.pep440_rs import Version as Version
-# from pypubgrub.pypi_types.pep440_rs import VersionSpecifier
-# from pypubgrub.pypi_types.pep508_rs import MarkerEnvironment, Requirement
 from resolve_prototype.common import (
     Cache,
 )
@@ -40,7 +36,8 @@ monotrail_logger.setLevel(logging.INFO)
 logger.setLevel(logging.INFO)
 # import pep440_rs
 # from pep508_rs import Requirement, VersionSpecifier, Version as BaseVersion, PreRelease, MarkerEnvironment
-from pypubgrub import (
+from pubgrub import (
+    VersionSpecifier,
     resolve as pubgrub_resolve,
     Version,
     MarkerEnvironment,
@@ -66,7 +63,7 @@ class Package:
     extras: set[str] | None = None
 
     def __post_init__(self):
-        if self.name != '.':
+        if self.name != ".":
             self.name = normalize(self.name)
 
     def __repr__(self):
@@ -139,10 +136,10 @@ class DependencyProvider:
         cached = self.versions.get(package)
         if cached:
             return cached
-        versions =  self._fetch_available_versions(package)
+        versions = self._fetch_available_versions(package)
         self.versions[package] = versions
         return versions
-    
+
     def _fetch_available_versions(self, package):
         if package.name == ".":
             versions = ["0.0.0"]
@@ -171,8 +168,8 @@ class DependencyProvider:
                     ):
                         continue
                 except Exception as error:
-                    print("ouch!", sys.stderr)
-                    breakpoint()
+                    # print("ouch!", package, error, file=sys.stderr)
+                    continue
                 versions.append(v)  # Cross binary
         versions = list(reversed(versions))
         logger.debug("available-versions: %s (%d)", package, len(versions))
@@ -186,17 +183,25 @@ class DependencyProvider:
 
     def _filter_dependency(self, package: Package, version, dep: Requirement):
         dep = Requirement(str(dep))  # Cross binary boundary
+        logger.debug("filtering: (%s %s): %s", package, version, dep)
         if not dep.evaluate_markers(self.env, list(package.extras or [])):
             logger.debug("rejected by env: %s", dep)
             return
         name = dep.name
         extras = dep.extras
         version_spec = dep.version_or_url
-        version_spec = [vs2tuple(vs) for vs in version_spec or []]
-
-        item = Package(name, frozenset(extras or [])), version_spec
-        logger.debug("package: %s version: %s, dep: %s", package, version, item)
-        yield item
+        type_ = type(version_spec)
+        if type_ is str:
+            logger.warning(f"XXX: package: {package} vs: {version_spec}")
+        elif type_ is list:
+            version_spec = [vs2tuple(vs) for vs in version_spec or []]
+            item = Package(name, frozenset(extras or [])), version_spec
+            logger.debug("package: %s version: %s, dep: %s", package, version, item)
+            yield item
+        else:
+            logger.debug("package: %s version: %s", package, version_spec)
+            item = Package(name, frozenset(extras or [])), []
+            yield item
 
     def get_dependencies(self, package: Package, version):
         version = str(version)
@@ -244,9 +249,8 @@ class DependencyProvider:
             http2=True, transport=self.transport, timeout=timeout
         ) as client:
             raw = await get_releases_raw(client, package, cache)
-            f = io.StringIO(raw)
-            data = json_stream.load(f)
-            versions = list(data['versions'])
+            data = json_stream.load(io.StringIO(raw))
+            versions = list(data["versions"])
         return versions
 
 
@@ -286,8 +290,15 @@ def transform(a, v):
 VERSION_ATTRS = ["dev", "epoch", "post", "pre", "release"]
 
 
-def vs2tuple(vs: Requirement):
+def vs2tuple(vs: VersionSpecifier):
+    if type(vs) is str:
+        try:
+            vs = VersionSpecifier(vs)
+        except ValueError:
+            print(f"PEP440: {vs}")
+            raise
     asdict = {a: transform(a, getattr(vs.version, a)) for a in VERSION_ATTRS}
+
     try:
         version = Version(**asdict)
     except Exception:
@@ -306,16 +317,25 @@ SAMPLE = [
 ]
 
 
-def resolve(dependencies: list[str]):
-    # spinner = Halo(text="Resolving dependencies")
-    spinner = Spinner()
-    dp = DependencyProvider(["https://pypi.org/simple"], spinner=spinner)
+def resolve(
+    dependencies: list[str], index_urls: list[str] = None, spinner: bool = None
+):
+    if spinner:
+        spinner = Spinner()
+    else:
+        spinner = None
+    if not index_urls:
+        index_urls = ["https://pypi.org/simple"]
+
+    dp = DependencyProvider(index_urls, spinner=spinner)
     p = Package(".")
     v = "0.0.0"
     dp.add_dependencies(p, v, dependencies)
-    spinner.start()
+    if spinner:
+        spinner.start()
     solution = pubgrub_resolve(dp, p, v)
-    spinner.finish()
+    if spinner:
+        spinner.finish()
     for p in sorted(
         (p for p in solution if p.name != "."),
         key=lambda p: p.name.lower(),
@@ -324,13 +344,49 @@ def resolve(dependencies: list[str]):
     return solution
 
 
+import tomli
+
+
 @click.command()
+@click.option("--requirements", "-r", type=click.File("r"), default=None)
+@click.option("--index-url", multiple=True)
 @click.option("--debug", "-d", is_flag=True)
-@click.argument("requirements", type=click.File("r"))
-def main(debug, requirements):
-    if debug:
-        logger.setLevel(logging.DEBUG)
+@click.option("--verbose", "-v", is_flag=True)
+@click.option("--spinner/--no-spinner", is_flag=True)
+def main(requirements, index_url, debug, verbose, spinner):
+    print(f"XXX: {requirements!r}", file=sys.stderr)
+    if debug or verbose:
+        logging.basicConfig(level=logging.INFO)
+
+        if debug:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.INFO)
     reqs = []
+    if requirements is None:
+        try:
+            if verbose:
+                print("try reading from pyproject.toml", file=sys.stderr)
+            with open("pyproject.toml", "rb") as f:
+                project = tomli.load(f)
+            requirements = project["project"].get("dependencies", [])
+        except Exception as error:
+            print(f"error: {error}", file=sys.stderr)
+    if requirements is None:
+        try:
+            if verbose:
+                print("try reading from setup.cfg", file=sys.stderr)
+            with open("setup.cfg", "rb") as f:
+                project = tomli.load(f)
+            requirements = project["project"]["dependencies"]
+        except Exception as error:
+            print(f"error: {error}", file=sys.stderr)
+    if requirements is None:
+        print(
+            "no requirement source found (tried pyproject.toml, setup.cfg)", file=sys.stderr
+        )
+        sys.exit(1)
+
     for line in requirements:
         line = line.strip()
         if line.startswith("#"):
@@ -339,7 +395,7 @@ def main(debug, requirements):
             print("TODO:", line, file=sys.stderr)
             continue
         reqs.append(line)
-    resolve(reqs)
+    resolve(reqs, index_url, spinner)
 
 
 def test():
