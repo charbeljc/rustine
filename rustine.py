@@ -8,15 +8,17 @@ try:
     sys.meta_path.insert(0, finder)
 except ImportError:
     pass
+import io
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 from progress.spinner import PixelSpinner as Spinner
-
+import json_stream
 import click
 import httpx
 from httpx import AsyncClient, AsyncHTTPTransport
 import logging
+
 logging.basicConfig(level=logging.INFO)
 # from pypubgrub.pypi_types.pep440_rs import Version as Version
 # from pypubgrub.pypi_types.pep440_rs import VersionSpecifier
@@ -28,11 +30,14 @@ from resolve_prototype.package_index import (
     logger as monotrail_logger,
     get_metadata,
     get_releases,
+    get_releases_raw,
 )
 from resolve_prototype.resolve import parse_requirement_fixup
+from resolve_prototype.common import normalize
+
 logger = logging.getLogger(__name__)
 monotrail_logger.setLevel(logging.INFO)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 # import pep440_rs
 # from pep508_rs import Requirement, VersionSpecifier, Version as BaseVersion, PreRelease, MarkerEnvironment
 from pypubgrub import (
@@ -41,6 +46,7 @@ from pypubgrub import (
     MarkerEnvironment,
     Requirement,
 )
+
 # root_requirements = [Requirement("clap"), Requirement("pylint"), Requirement("pylint")]
 
 # requires_python = VersionSpecifier("<=3.8")
@@ -59,17 +65,21 @@ class Package:
     name: str
     extras: set[str] | None = None
 
+    def __post_init__(self):
+        if self.name != '.':
+            self.name = normalize(self.name)
+
     def __repr__(self):
         return f"<Package({self})>"
 
     def __str__(self):
         if self.extras:
-            return f"{self.name}[{','.join(self.extras)}]"
+            return f"{self.name}[{','.join(sorted(self.extras))}]"
         return self.name
 
 
 class DependencyProvider:
-    transport: AsyncHTTPTransport 
+    transport: AsyncHTTPTransport
     cache: Cache
     env: MarkerEnvironment
     user_dependencies: dict[tuple[Package, Version], list[Requirement]]
@@ -111,8 +121,9 @@ class DependencyProvider:
             raise
 
     def add_dependencies(
-        self, package: Package, version: Version, requirements: list[Requirement | str]
+        self, package: Package, version: str, requirements: list[Requirement | str]
     ):
+        logger.debug("add-dependencies: (%r, %r) : %r", package, version, requirements)
         self.user_dependencies[(package, version)] = [
             Requirement(r) if type(r) is str else r for r in requirements
         ]
@@ -125,13 +136,16 @@ class DependencyProvider:
     #     NotImplementedError("choose_package_version")
 
     def available_versions(self, package: Package):
-        logger.info("available-versions: %s", package)
         cached = self.versions.get(package)
         if cached:
             return cached
-
+        versions =  self._fetch_available_versions(package)
+        self.versions[package] = versions
+        return versions
+    
+    def _fetch_available_versions(self, package):
         if package.name == ".":
-            versions = [Version("0.0.0")]
+            versions = ["0.0.0"]
         else:
             retry = 2
             while retry:  # loop = asyncio.get_running_loop()
@@ -148,24 +162,20 @@ class DependencyProvider:
                     print(f" die! {error} {package}", file=sys.stderr)
                     raise
             versions = []
-            for v in results.keys():
+            for v in results:
                 try:
-                    if v.any_prerelease() and (
+                    if Version(v).any_prerelease() and (
                         not self.allow_pre
                         or self.allow_pre is not True
                         and package.name in self.allow_pre
                     ):
                         continue
                 except Exception as error:
+                    print("ouch!", sys.stderr)
                     breakpoint()
-                    print("ouch!")
-                versions.append(Version(str(v))) # Cross binary
-            versions.sort(reverse=True)
-
-        # print(f"({len(versions)})", file=sys.stderr)
-        # versions = self.package_finder.find_matches(package)
-        # return [Version(p.version) for p in versions]
-        self.versions[package] = versions
+                versions.append(v)  # Cross binary
+        versions = list(reversed(versions))
+        logger.debug("available-versions: %s (%d)", package, len(versions))
         return versions
 
     def _filter_dependencies(
@@ -175,8 +185,7 @@ class DependencyProvider:
             yield from self._filter_dependency(package, version, dep)
 
     def _filter_dependency(self, package: Package, version, dep: Requirement):
-
-        dep = Requirement(str(dep)) # Cross binary boundary
+        dep = Requirement(str(dep))  # Cross binary boundary
         if not dep.evaluate_markers(self.env, list(package.extras or [])):
             logger.debug("rejected by env: %s", dep)
             return
@@ -186,13 +195,14 @@ class DependencyProvider:
         version_spec = [vs2tuple(vs) for vs in version_spec or []]
 
         item = Package(name, frozenset(extras or [])), version_spec
-        logger.debug("package: %s\nversion: %s,\ndep: %s", package, version, item)
+        logger.debug("package: %s version: %s, dep: %s", package, version, item)
         yield item
 
     def get_dependencies(self, package: Package, version):
-        logger.debug("get-dependencies: %s, %s", package, version)
+        version = str(version)
+        logger.debug("get-dependencies: %r, %r", package, version)
         if package.name == ".":
-            reqs = self.user_dependencies.get((package, version), [])
+            reqs = self.user_dependencies.get((package, str(version)), [])
         else:
             reqs = [dep for dep in self._fetch_dependencies(package, version)]
         logger.debug("get-dependencies: raw: %s", reqs)
@@ -222,17 +232,22 @@ class DependencyProvider:
 
     async def _fetch_metadata(self, package, version, cache):
         timeout = httpx.Timeout(10.0, connect=10.0)
-        async with AsyncClient(http2=True, transport=self.transport, timeout=timeout) as client:
+        async with AsyncClient(
+            http2=True, transport=self.transport, timeout=timeout
+        ) as client:
             result = await get_metadata(client, package, version, cache)
         return result
 
-
     async def _fetch_releases(self, package, cache):
         timeout = httpx.Timeout(10.0, connect=10.0)
-        async with AsyncClient(http2=True, transport=self.transport, timeout=timeout) as client:
-            result = await get_releases(client, package, cache)
-        return result
-
+        async with AsyncClient(
+            http2=True, transport=self.transport, timeout=timeout
+        ) as client:
+            raw = await get_releases_raw(client, package, cache)
+            f = io.StringIO(raw)
+            data = json_stream.load(f)
+            versions = list(data['versions'])
+        return versions
 
 
 def normalize_requirement(req):
@@ -282,7 +297,6 @@ def vs2tuple(vs: Requirement):
     return spec
 
 
-
 SAMPLE = [
     "ipython",
     "pytest",
@@ -292,12 +306,12 @@ SAMPLE = [
 ]
 
 
-def resolve(dependencies):
+def resolve(dependencies: list[str]):
     # spinner = Halo(text="Resolving dependencies")
     spinner = Spinner()
     dp = DependencyProvider(["https://pypi.org/simple"], spinner=spinner)
     p = Package(".")
-    v = Version("0.0.0")
+    v = "0.0.0"
     dp.add_dependencies(p, v, dependencies)
     spinner.start()
     solution = pubgrub_resolve(dp, p, v)
@@ -306,13 +320,16 @@ def resolve(dependencies):
         (p for p in solution if p.name != "."),
         key=lambda p: p.name.lower(),
     ):
-        print(f"{p.name.lower()}=={solution[p]}")
+        print(f"{p}=={solution[p]}")
     return solution
 
 
 @click.command()
+@click.option("--debug", "-d", is_flag=True)
 @click.argument("requirements", type=click.File("r"))
-def main(requirements):
+def main(debug, requirements):
+    if debug:
+        logger.setLevel(logging.DEBUG)
     reqs = []
     for line in requirements:
         line = line.strip()
