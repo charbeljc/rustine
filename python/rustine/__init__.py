@@ -1,51 +1,40 @@
 from __future__ import annotations
 
 try:
-    import oxidized_importer
     import sys
+
+    import oxidized_importer
 
     finder = oxidized_importer.OxidizedFinder()
     sys.meta_path.insert(0, finder)
 except ImportError:
     import sys
-import os
-import io
+
 import asyncio
+import io
+
+# from urllib3.util.url import parse_url
+import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
-from progress.spinner import PixelSpinner as Spinner
-import json_stream
+
 import click
 import httpx
+import json_stream
+import tomli
 from httpx import AsyncClient, AsyncHTTPTransport
-import logging
-
-from resolve_prototype.common import (
-    Cache,
-)
-from resolve_prototype.package_index import (
-    logger as monotrail_logger,
-    get_metadata,
-    get_releases_raw,
-)
+from progress.spinner import PixelSpinner as Spinner
+from pubgrub import MarkerEnvironment, Requirement, Version, VersionSpecifier
+from pubgrub import resolve as pubgrub_resolve
+from resolve_prototype.common import Cache, normalize
+from resolve_prototype.package_index import get_metadata, get_releases_raw
+from resolve_prototype.package_index import logger as monotrail_logger
 from resolve_prototype.resolve import parse_requirement_fixup
-from resolve_prototype.common import normalize
-
-from pubgrub import (
-    VersionSpecifier,
-    resolve as pubgrub_resolve,
-    Version,
-    MarkerEnvironment,
-    Requirement,
-)
-
 
 logger = logging.getLogger(__name__)
 monotrail_logger.setLevel(logging.INFO)
 logger.setLevel(logging.INFO)
-# root_requirements = [Requirement("clap"), Requirement("pylint"), Requirement("pylint")]
-
-# requires_python = VersionSpecifier("<=3.8")
 
 
 def asyncio_run(coro):
@@ -191,7 +180,10 @@ class DependencyProvider:
         version_spec = dep.version_or_url
         type_ = type(version_spec)
         if type_ is str:
-            logger.warning(f"TODO: package: {package} vs: {version_spec}")
+            # url = parse_url(version_spec)
+            item = Package(name, frozenset(extras or [])), version_spec
+            logger.debug("package: %s version: %s, dep: %s", package, version, item)
+            yield item
         elif type_ is list:
             version_spec = [vs2tuple(vs) for vs in version_spec or []]
             item = Package(name, frozenset(extras or [])), version_spec
@@ -236,45 +228,37 @@ class DependencyProvider:
 
     async def _fetch_metadata(self, package, version, cache):
         timeout = httpx.Timeout(10.0, connect=10.0)
-        http_proxy = os.getenv('http_proxy')
-        https_proxy = os.getenv('https_proxy')
+        http_proxy = os.getenv("http_proxy")
+        https_proxy = os.getenv("https_proxy")
         proxies = None
         if http_proxy and https_proxy:
             if http_proxy != https_proxy:
-                proxies = { 
-                           'http://': http_proxy,
-                           'https://': https_proxy
-                }
+                proxies = {"http://": http_proxy, "https://": https_proxy}
             else:
                 proxies = http_proxy
         else:
             proxies = http_proxy or https_proxy
-            
+
         async with AsyncClient(
-            proxies=proxies,
-            http2=True, transport=self.transport, timeout=timeout
+            proxies=proxies, http2=True, transport=self.transport, timeout=timeout
         ) as client:
             result = await get_metadata(client, package, version, cache)
         return result
 
     async def _fetch_releases(self, package, cache):
         timeout = httpx.Timeout(10.0, connect=10.0)
-        http_proxy = os.getenv('http_proxy')
-        https_proxy = os.getenv('https_proxy')
+        http_proxy = os.getenv("http_proxy")
+        https_proxy = os.getenv("https_proxy")
         proxies = None
         if http_proxy and https_proxy:
             if http_proxy != https_proxy:
-                proxies = { 
-                           'http://': http_proxy,
-                           'https://': https_proxy
-                }
+                proxies = {"http://": http_proxy, "https://": https_proxy}
             else:
                 proxies = http_proxy
         else:
             proxies = http_proxy or https_proxy
         async with AsyncClient(
-            proxies=proxies,
-            http2=True, transport=self.transport, timeout=timeout
+            proxies=proxies, http2=True, transport=self.transport, timeout=timeout
         ) as client:
             raw = await get_releases_raw(client, package, cache)
             data = json_stream.load(io.StringIO(raw))
@@ -340,7 +324,6 @@ SAMPLE = [
     "pytest",
     "clap",
     "black[d,jupyter]",
-    # "transformers[torch,sentencepiece,tokenizers,torch-speech,vision,integrations,timm,torch-vision,codecarbon,accelerate,video]",
 ]
 
 
@@ -369,9 +352,6 @@ def resolve(
     ):
         print(f"{p}=={solution[p]}")
     return solution
-
-
-import tomli
 
 
 @click.command()
