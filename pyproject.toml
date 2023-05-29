@@ -9,8 +9,8 @@ dependencies = [
   "progress"
 , "httpx"
 , "click"
-, "pubgrub @ file:///Users/jacquinc/Hack/rustine/src/pubgrub-pyo3"
-, "resolve_prototype @ file:///Users/jacquinc/Hack/rustine/src/monotrail-resolve"
+, "pubgrub @ git+https://github.com/charbeljc/pubgrub-pyo3@main"
+, "resolve_prototype @ git+https://github.com/charbeljc/monotrail-resolve@wip"
 , "json_stream~=2.3.0"
 , "distlib~=0.3.6"
 ]
