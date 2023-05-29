@@ -7,9 +7,9 @@
 	branch = pubgrub
 [submodule "src/pep508_rs"]
 	path = src/pep508_rs
-	url = https://github.com:charbeljc/pep508_rs.git
+	url = https://github.com/charbeljc/pep508_rs.git
 	branch = pubgrub
 [submodule "src/monotrail-resolve"]
 	path = src/monotrail-resolve
-	url = https://github.com:charbeljc/monotrail-resolve.git
+	url = https://github.com/charbeljc/monotrail-resolve.git
 	branch = wip
