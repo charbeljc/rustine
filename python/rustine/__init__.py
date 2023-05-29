@@ -7,7 +7,8 @@ try:
     finder = oxidized_importer.OxidizedFinder()
     sys.meta_path.insert(0, finder)
 except ImportError:
-    pass
+    import sys
+import os
 import io
 import asyncio
 from dataclasses import dataclass
@@ -25,17 +26,11 @@ from resolve_prototype.common import (
 from resolve_prototype.package_index import (
     logger as monotrail_logger,
     get_metadata,
-    get_releases,
     get_releases_raw,
 )
 from resolve_prototype.resolve import parse_requirement_fixup
 from resolve_prototype.common import normalize
 
-logger = logging.getLogger(__name__)
-monotrail_logger.setLevel(logging.INFO)
-logger.setLevel(logging.INFO)
-# import pep440_rs
-# from pep508_rs import Requirement, VersionSpecifier, Version as BaseVersion, PreRelease, MarkerEnvironment
 from pubgrub import (
     VersionSpecifier,
     resolve as pubgrub_resolve,
@@ -44,6 +39,10 @@ from pubgrub import (
     Requirement,
 )
 
+
+logger = logging.getLogger(__name__)
+monotrail_logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)
 # root_requirements = [Requirement("clap"), Requirement("pylint"), Requirement("pylint")]
 
 # requires_python = VersionSpecifier("<=3.8")
@@ -167,7 +166,7 @@ class DependencyProvider:
                         and package.name in self.allow_pre
                     ):
                         continue
-                except Exception as error:
+                except Exception:
                     # print("ouch!", package, error, file=sys.stderr)
                     continue
                 versions.append(v)  # Cross binary
@@ -237,7 +236,22 @@ class DependencyProvider:
 
     async def _fetch_metadata(self, package, version, cache):
         timeout = httpx.Timeout(10.0, connect=10.0)
+        http_proxy = os.getenv('http_proxy')
+        https_proxy = os.getenv('https_proxy')
+        proxies = None
+        if http_proxy and https_proxy:
+            if http_proxy != https_proxy:
+                proxies = { 
+                           'http://': http_proxy,
+                           'https://': https_proxy
+                }
+            else:
+                proxies = http_proxy
+        else:
+            proxies = http_proxy or https_proxy
+            
         async with AsyncClient(
+            proxies=proxies,
             http2=True, transport=self.transport, timeout=timeout
         ) as client:
             result = await get_metadata(client, package, version, cache)
@@ -245,7 +259,21 @@ class DependencyProvider:
 
     async def _fetch_releases(self, package, cache):
         timeout = httpx.Timeout(10.0, connect=10.0)
+        http_proxy = os.getenv('http_proxy')
+        https_proxy = os.getenv('https_proxy')
+        proxies = None
+        if http_proxy and https_proxy:
+            if http_proxy != https_proxy:
+                proxies = { 
+                           'http://': http_proxy,
+                           'https://': https_proxy
+                }
+            else:
+                proxies = http_proxy
+        else:
+            proxies = http_proxy or https_proxy
         async with AsyncClient(
+            proxies=proxies,
             http2=True, transport=self.transport, timeout=timeout
         ) as client:
             raw = await get_releases_raw(client, package, cache)
@@ -381,7 +409,8 @@ def main(requirements, index_url, debug, verbose, spinner):
             print(f"error: {error}", file=sys.stderr)
     if requirements is None:
         print(
-            "no requirement source found (tried pyproject.toml, setup.cfg)", file=sys.stderr
+            "no requirement source found (tried pyproject.toml, setup.cfg)",
+            file=sys.stderr,
         )
         sys.exit(1)
 
