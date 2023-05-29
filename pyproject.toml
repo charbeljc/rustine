@@ -9,8 +9,11 @@ dependencies = [
   "progress"
 , "httpx"
 , "click"
-, "resolve_prototype @ file:///home/rebelcat/Hack/Rust/rustine/src/monotrail-resolve"
-, "pubgrub @ file:///home/rebelcat/Hack/Rust/rustine/src/pubgrub-pyo3", "json_stream~=2.3.0", "distlib~=0.3.6"]
+, "pubgrub @ file:///Users/jacquinc/Hack/rustine/src/pubgrub-pyo3"
+, "resolve_prototype @ file:///Users/jacquinc/Hack/rustine/src/monotrail-resolve"
+, "json_stream~=2.3.0"
+, "distlib~=0.3.6"
+]
 readme = "README.md"
 requires-python = ">= 3.10"
 
