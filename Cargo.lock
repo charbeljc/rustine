@@ -270,8 +270,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pep440_rs"
 version = "0.3.9"
 source = "git+https://github.com/charbeljc/pep440-rs.git?branch=pubgrub#282edb276fca6c6a7afbfb2f2f40d9cf62e36963"
@@ -285,7 +283,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> 58457bf (tweaks dependencies)
 name = "pep508_rs"
 version = "0.2.1"
 dependencies = [
@@ -293,11 +290,7 @@ dependencies = [
  "indoc 2.0.1",
  "log",
  "once_cell",
-<<<<<<< HEAD
- "pep440_rs",
-=======
  "pep440_rs 0.3.9 (git+https://github.com/charbeljc/pep440-rs.git?branch=pubgrub)",
->>>>>>> 58457bf (tweaks dependencies)
  "pyo3",
  "pyo3-log",
  "regex",
@@ -312,8 +305,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "pep508_rs"
 version = "0.2.1"
 source = "git+https://github.com/charbeljc/pep508_rs.git?branch=wip3#87013ea9aa7fd011673dd4a29178959fbc12ac79"
@@ -334,7 +325,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> 58457bf (tweaks dependencies)
 name = "percent-encoding"
 version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -379,20 +369,11 @@ dependencies = [
 name = "pubgrub-pyo3"
 version = "0.1.0"
 dependencies = [
-<<<<<<< HEAD
- "pep440_rs",
- "pep508_rs",
- "pubgrub",
- "pyo3",
- "pyo3-log",
- "pypi_types",
-=======
  "pep440_rs 0.3.9 (git+https://github.com/charbeljc/pep440-rs.git?branch=pubgrub)",
  "pep508_rs 0.2.1 (git+https://github.com/charbeljc/pep508_rs.git?branch=wip3)",
  "pubgrub",
  "pyo3",
  "pyo3-log",
->>>>>>> 58457bf (tweaks dependencies)
  "rustc-hash",
  "serde",
 ]
@@ -478,13 +459,8 @@ dependencies = [
  "indexmap",
  "mailparse",
  "once_cell",
-<<<<<<< HEAD
- "pep440_rs",
- "pep508_rs",
-=======
  "pep440_rs 0.3.9",
  "pep508_rs 0.2.1",
->>>>>>> 58457bf (tweaks dependencies)
  "pyo3",
  "pyo3-log",
  "regex",
