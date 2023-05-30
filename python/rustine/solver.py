@@ -1,4 +1,6 @@
 from __future__ import annotations
+import typing
+from typing import TypeVar
 
 try:
     import sys
@@ -27,6 +29,7 @@ from httpx import AsyncClient, AsyncHTTPTransport
 from progress.spinner import PixelSpinner as Spinner
 from pubgrub import MarkerEnvironment, Requirement, Version, VersionSpecifier
 from pubgrub import resolve as pubgrub_resolve
+from pubgrub.provider import AbstractDependencyProvider, P, V, R
 from resolve_prototype.common import Cache, normalize
 from resolve_prototype.package_index import get_metadata, get_releases_raw
 from resolve_prototype.package_index import logger as monotrail_logger
@@ -48,9 +51,26 @@ def asyncio_run(coro):
 @dataclass(order=True, unsafe_hash=True)
 class Package:
     name: str
-    extras: set[str] | None = None
+    extras: set[str] | list[str] | None = None
 
     def __post_init__(self):
+        if "[" in self.name:
+            if self.extras:
+                raise ValueError(
+                    "Extra keyword should be used only when not specified in package name."
+                )
+            name, extras = self.name.split("]")
+            name = name.strip()
+            extras = extras.strip()
+            if extras[-1] != "]":
+                raise ValueError("Unterminated extras in package specification.")
+            extras = set(extra.strip() for extra in extras.split(","))
+            self.name = name
+            self.extras = extras
+
+        if type(self.extras) is list:
+            self.extras = set(self.extras)
+
         if self.name != ".":
             self.name = normalize(self.name)
 
@@ -63,12 +83,12 @@ class Package:
         return self.name
 
 
-class DependencyProvider:
+class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     transport: AsyncHTTPTransport
     cache: Cache
     env: MarkerEnvironment
-    user_dependencies: dict[tuple[Package, Version], list[Requirement]]
-    versions: dict[str, list[Version]]
+    user_dependencies: dict[tuple[Package, str], list[Requirement]]
+    versions: dict[Package, list[str]]
     spinner: Spinner | None = None
     iterations: int = 0
     allow_pre: bool | list[str]
@@ -76,7 +96,7 @@ class DependencyProvider:
     def __init__(
         self,
         index_urls,
-        env: MarkerEnvironment = None,
+        env: MarkerEnvironment | None = None,
         allow_pre: bool | list[str] | None = None,
         spinner: Spinner = None,
     ):
@@ -85,8 +105,9 @@ class DependencyProvider:
             Path("~/.cache/rustine").expanduser(), refresh_versions=False
         )
         if not env:
-            env = MarkerEnvironment.current()
-        self.env = env
+            self.env = MarkerEnvironment.current()
+        else:
+            self.env = env
         self.user_dependencies = dict()
         self.client = AsyncClient()
         self.versions = dict()
@@ -109,16 +130,16 @@ class DependencyProvider:
         self, package: Package, version: str, requirements: list[Requirement | str]
     ):
         logger.debug("add-dependencies: (%r, %r) : %r", package, version, requirements)
+
+        def ensure(req: str | Requirement) -> Requirement:
+            if type(req) is str:
+                return Requirement(req)
+            else:
+                return typing.cast(Requirement, req)
+
         self.user_dependencies[(package, version)] = [
-            Requirement(r) if type(r) is str else r for r in requirements
+            ensure(req) for req in requirements
         ]
-
-    # def choose_package_version(self, potential_packages):
-    #     package, version_range = potential_packages[0]
-    #     if package == ".":
-    #         return ".", Version("0.0.0")
-
-    #     NotImplementedError("choose_package_version")
 
     def available_versions(self, package: Package):
         cached = self.versions.get(package)
