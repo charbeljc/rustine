@@ -2,9 +2,12 @@ import os
 import sys
 from pathlib import Path
 from typing import Iterator
-from git import Repo
+
 import click
 import tomlkit
+from tomlkit import TOMLDocument
+import git
+
 from pep508_rs import Requirement
 
 
@@ -71,7 +74,7 @@ def main(mode):
     if not gitdir:
         print("no .git dir found", file=sys.stderr)
         sys.exit(1)
-    repo = Repo(gitdir.parent)
+    repo = git.Repo(gitdir.parent)
 
     submodules = dict()
     for module in repo.submodules:
@@ -88,13 +91,13 @@ def main(mode):
         edit_submodule_metadata(repo, module, submodules, mode)
 
 
-def edit_submodule_metadata(repo, module, submodules, mode):
+def edit_submodule_metadata(repo: git.Repo, module, submodules, mode):
     workspace = Path(repo.working_dir)
     workdir = workspace.joinpath(module.path)
     edit_workdir_metadata(repo, workdir, submodules, mode)
 
 
-def edit_workdir_metadata(repo, workdir, submodules, mode):
+def edit_workdir_metadata(repo: git.Repo, workdir: Path, submodules, mode):
     for meta, kind in (
         (locate_file("Cargo.toml", workdir), "cargo"),
         (locate_file("pyproject.toml", workdir), "pyproject"),
@@ -108,16 +111,17 @@ def edit_workdir_metadata(repo, workdir, submodules, mode):
                 pyproject_edit(doc, repo, workdir, meta, submodules, mode)
 
 
-def cargo_edit(doc, repo: Repo, workdir, meta, submodules, mode):
+def cargo_edit(doc: TOMLDocument, repo: git.Repo, workdir: Path, meta: Path, submodules, mode):
     workspace = Path(repo.working_dir)
     deps = doc.get("dependencies")
     edited = False
     if not deps:
         ws = doc.get("workspace")
         if not ws:
-            print("no deps, not a workspace, strange")
+            print("no deps, not a workspace, nothing todo")
             return
-        edit_workspace_metadata(repo, workdir, submodules, mode, doc)
+        members = ws["members"]
+        edit_workspace_metadata(repo, workdir, members, submodules, mode)
         return
     for dep in deps:
         spec = deps[dep]
@@ -150,7 +154,7 @@ def cargo_edit(doc, repo: Repo, workdir, meta, submodules, mode):
             tomlkit.dump(doc, out)
 
 
-def pyproject_edit(doc, repo: Repo, workdir, meta, submodules, mode):
+def pyproject_edit(doc: TOMLDocument, repo: git.Repo, workdir, meta, submodules, mode):
     edited = False
     workspace = Path(repo.working_dir)
     if "project" not in doc:
@@ -203,7 +207,7 @@ def pyproject_edit(doc, repo: Repo, workdir, meta, submodules, mode):
             tomlkit.dump(doc, out)
 
 
-def poetry_to_req(doc, dev=False):
+def poetry_to_req(doc: TOMLDocument, dev=False):
     deps = doc["tool"]["poetry"]["dependencies"]
     for package, version in deps.items():
         if package == "python":
@@ -224,8 +228,7 @@ def poetry_to_req(doc, dev=False):
                 print(package, v.replace("^", "~="))
 
 
-def edit_workspace_metadata(repo: Repo, workdir: Path, submodules, mode, ws):
-    members = ws["workspace"]["members"]
+def edit_workspace_metadata(repo: git.Repo, workdir: Path, members: list[str], submodules, mode):
     for member in members:
         edit_workdir_metadata(repo, workdir.joinpath(member), submodules, mode)
 
