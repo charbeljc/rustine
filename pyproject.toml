@@ -6,13 +6,13 @@ authors = [
     { name = "Charbel Jacquin", email = "charbeljacquin@gmail.com" }
 ]
 dependencies = [
-  "progress~=1.6"
-, "httpx~=0.24.1"
-, "click~=8.1.3"
-, "pubgrub @ file:///Users/jacquinc/Hack/rustine/src/pubgrub-pyo3"
-, "resolve_prototype @ file:///Users/jacquinc/Hack/rustine/src/monotrail-resolve"
-, "json_stream~=2.3.0"
-, "distlib~=0.3.6"
+    "progress",
+    "httpx~=0.24.1",
+    "click~=8.1.3",
+    "pubgrub @ file:///Users/jacquinc/Hack/rustine/src/pubgrub-pyo3",
+    "resolve_prototype @ file:///Users/jacquinc/Hack/rustine/src/monotrail-resolve",
+    "json_stream~=2.3.0",
+    "distlib~=0.3.6",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -29,4 +29,4 @@ dev-dependencies = ["ipython~=8.13.2"]
 where = ["python"] 
 
 [project.scripts]
-rustine = "rustine:main"
+rustine = "rustine.solver:main"
