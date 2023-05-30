@@ -6,16 +6,16 @@ authors = [
     { name = "Charbel Jacquin", email = "charbeljacquin@gmail.com" }
 ]
 dependencies = [
-  "progress"
-, "httpx"
-, "click"
-, "pubgrub @ git+https://github.com/charbeljc/pubgrub-pyo3@main"
-, "resolve_prototype @ git+https://github.com/charbeljc/monotrail-resolve@wip"
+  "progress~=1.6"
+, "httpx~=0.24.1"
+, "click~=8.1.3"
+, "pubgrub @ file:///Users/jacquinc/Hack/rustine/src/pubgrub-pyo3"
+, "resolve_prototype @ file:///Users/jacquinc/Hack/rustine/src/monotrail-resolve"
 , "json_stream~=2.3.0"
 , "distlib~=0.3.6"
 ]
 readme = "README.md"
-requires-python = ">= 3.10"
+requires-python = ">= 3.8"
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
