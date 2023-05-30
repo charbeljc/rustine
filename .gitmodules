@@ -10,7 +10,3 @@
 	path = src/pep508_rs
 	url = https://github.com/charbeljc/pep508_rs.git
 	branch = wip3
-[submodule "src/monotrail-resolve"]
-	path = src/monotrail-resolve
-	url = https://github.com/charbeljc/monotrail-resolve.git
-	branch = wip
