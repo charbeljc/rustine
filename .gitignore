@@ -1,3 +1,4 @@
+venv*
 *.egg-info
 **/target
 __pycache__
