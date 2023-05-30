@@ -5,7 +5,6 @@ from typing import Iterator
 from git import Repo
 import click
 import tomlkit
-from tomlkit import dumps, parse
 from pep508_rs import Requirement
 
 
@@ -70,7 +69,7 @@ def main(mode):
     print(f"applying mode: {mode}", file=sys.stderr)
     gitdir = locate_dir(".git", climbing=True)
     if not gitdir:
-        print(f"no .git dir found", file=sys.stderr)
+        print("no .git dir found", file=sys.stderr)
         sys.exit(1)
     repo = Repo(gitdir.parent)
 
@@ -91,10 +90,7 @@ def main(mode):
 
 def edit_submodule_metadata(repo, module, submodules, mode):
     workspace = Path(repo.working_dir)
-    path = module.path
-    url = module.url
-    branch = module.branch_name
-    workdir = workspace.joinpath(path)
+    workdir = workspace.joinpath(module.path)
     edit_workdir_metadata(repo, workdir, submodules, mode)
 
 
@@ -103,10 +99,9 @@ def edit_workdir_metadata(repo, workdir, submodules, mode):
         (locate_file("Cargo.toml", workdir), "cargo"),
         (locate_file("pyproject.toml", workdir), "pyproject"),
     ):
-        edited = False
         if meta:
             print(f"(not) editing {kind} {meta}, mode={mode}")
-            doc = parse(open(meta).read())
+            doc = tomlkit.parse(open(meta).read())
             if kind == "cargo":
                 cargo_edit(doc, repo, workdir, meta, submodules, mode)
             elif kind == "pyproject":
@@ -138,7 +133,6 @@ def cargo_edit(doc, repo: Repo, workdir, meta, submodules, mode):
             if mode == "prod" and not git_url and pth:
                 print("TODO dev -> prod")
             elif mode == "dev" and git_url and not pth:
-                print("TODO prod -> dev")
                 newspec = tomlkit.inline_table()
                 newspec.add("path", str(workspace.joinpath(candidate.path)))
                 for key, value in spec.items():
@@ -231,7 +225,6 @@ def poetry_to_req(doc, dev=False):
 
 
 def edit_workspace_metadata(repo: Repo, workdir: Path, submodules, mode, ws):
-    workspace = Path(repo.working_dir)
     members = ws["workspace"]["members"]
     for member in members:
         edit_workdir_metadata(repo, workdir.joinpath(member), submodules, mode)

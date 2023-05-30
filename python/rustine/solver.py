@@ -1,6 +1,5 @@
 from __future__ import annotations
 import typing
-from typing import TypeVar
 
 try:
     import sys
@@ -23,20 +22,19 @@ from pathlib import Path
 
 import click
 import httpx
+import json
 import json_stream
 import tomli
 from httpx import AsyncClient, AsyncHTTPTransport
 from progress.spinner import PixelSpinner as Spinner
 from pubgrub import MarkerEnvironment, Requirement, Version, VersionSpecifier
 from pubgrub import resolve as pubgrub_resolve
-from pubgrub.provider import AbstractDependencyProvider, P, V, R
-from resolve_prototype.common import Cache, normalize
-from resolve_prototype.package_index import get_metadata, get_releases_raw
-from resolve_prototype.package_index import logger as monotrail_logger
-from resolve_prototype.resolve import parse_requirement_fixup
+from pubgrub.provider import AbstractDependencyProvider
+from rustine.tools import Cache, normalize
+from rustine.tools import parse_requirement_fixup
+from rustine.package_index import get_metadata, get_releases_raw
 
 logger = logging.getLogger(__name__)
-monotrail_logger.setLevel(logging.INFO)
 logger.setLevel(logging.INFO)
 
 
@@ -57,7 +55,8 @@ class Package:
         if "[" in self.name:
             if self.extras:
                 raise ValueError(
-                    "Extra keyword should be used only when not specified in package name."
+                    "Extra keyword should be used only when "
+                    "not specified in package name."
                 )
             name, extras = self.name.split("]")
             name = name.strip()
@@ -241,8 +240,9 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
                     continue
                 print(f" error: {error} {package} {version}")
                 raise
+        data = json.loads(result)
 
-        for req in result.requires_dist or []:
+        for req in data["info"]["requires_dist"] or []:
             req = parse_requirement_fixup(req, None)
             req = normalize_requirement(req)
             yield req

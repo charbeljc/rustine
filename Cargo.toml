@@ -5,7 +5,6 @@ edition = "2021"
 
 members = [
     "src/pubgrub-pyo3",
-    "src/monotrail-resolve/pypi_types_crate",
     "src/pep440-rs",
     "src/pep508_rs",
 ]
