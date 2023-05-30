@@ -183,7 +183,7 @@ dependencies = [
 [[package]]
 name = "pep440_rs"
 version = "0.3.9"
-source = "git+https://github.com/charbeljc/pep440-rs.git?branch=pubgrub#282edb276fca6c6a7afbfb2f2f40d9cf62e36963"
+source = "git+https://github.com/charbeljc/pep440-rs.git?branch=pubgrub#efffe01d81e619e3abdd35a56917a6ff157af704"
 dependencies = [
  "lazy_static",
  "pubgrub",

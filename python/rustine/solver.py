@@ -376,12 +376,15 @@ def resolve(
 
 
 @click.command()
-@click.option("--requirements", "-r", type=click.File("r"), default=None)
+@click.option("--python", type=click.Path(), default=None)
+@click.option("--output", "-o", type=click.Path(), default=None)
 @click.option("--index-url", multiple=True)
 @click.option("--debug", "-d", is_flag=True)
+@click.option("--quiet", "-q", is_flag=True)
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--spinner/--no-spinner", is_flag=True)
-def main(requirements, index_url, debug, verbose, spinner):
+@click.argument("requirements", type=click.File("r"))
+def main(requirements, python, output, index_url, debug, quiet, verbose, spinner):
     if debug or verbose:
         logging.basicConfig(level=logging.INFO)
 
