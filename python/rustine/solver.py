@@ -383,7 +383,7 @@ def resolve(
 @click.option("--quiet", "-q", is_flag=True)
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--spinner/--no-spinner", is_flag=True)
-@click.argument("requirements", type=click.File("r"))
+@click.option("--requirements", "-r", type=click.File("r"), default=None)
 def main(requirements, python, output, index_url, debug, quiet, verbose, spinner):
     if debug or verbose:
         logging.basicConfig(level=logging.INFO)
