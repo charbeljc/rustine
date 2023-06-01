@@ -367,11 +367,6 @@ def resolve(
     solution = pubgrub_resolve(dp, p, v)
     if spinner:
         spinner.finish()
-    for p in sorted(
-        (p for p in solution if p.name != "."),
-        key=lambda p: p.name.lower(),
-    ):
-        print(f"{p}=={solution[p]}")
     return solution
 
 
@@ -420,13 +415,26 @@ def main(requirements, python, output, index_url, debug, quiet, verbose, spinner
 
     for line in requirements:
         line = line.strip()
+        if not line:
+            continue
         if line.startswith("#"):
             continue
         if line.startswith("-"):
-            print("TODO:", line, file=sys.stderr)
+            # print("TODO:", line, file=sys.stderr)
             continue
         reqs.append(line)
-    resolve(reqs, index_url, spinner)
+    solution = resolve(reqs, index_url, spinner)
+    if output:
+        file = open(output, "w")
+    else:
+        file = sys.stdout
+    for p in sorted(
+        (p for p in solution if p.name != "."),
+        key=lambda p: p.name.lower(),
+    ):
+        print(f"{p}=={solution[p]}", file=file)
+    if output:
+        file.close()
 
 
 def test():
