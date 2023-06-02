@@ -128,7 +128,7 @@ def cargo_edit(doc: TOMLDocument, repo: git.Repo, workdir: Path, meta: Path, sub
         if isinstance(spec, dict):
             git_url = spec.get("git")
             pth = spec.get("path")
-            br = spec.get("branch")
+            spec.get("branch")
             candidate = submodules.get(git_url)
             if not candidate:
                 # print("not a submodule")

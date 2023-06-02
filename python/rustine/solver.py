@@ -12,31 +12,24 @@ except ImportError:
     import sys
 
 import asyncio
-import io
 
 # from urllib3.util.url import parse_url
 import logging
-import os
 from dataclasses import dataclass
-from pathlib import Path
 
 import click
-import httpx
-import json
-import json_stream
 import tomli
 from httpx import AsyncClient, AsyncHTTPTransport
 from progress.spinner import PixelSpinner as Spinner
 from pubgrub import MarkerEnvironment, Requirement, Version, VersionSpecifier
 from pubgrub import resolve as pubgrub_resolve
 from pubgrub.provider import AbstractDependencyProvider
-from rustine.tools import Cache, normalize
-from rustine.tools import parse_requirement_fixup
-from rustine.package_index import get_metadata, get_releases_raw
+from rustine.tools import normalize
+from rustine.package_index import get_project_versions, get_project_version_dependencies, PYPI_SIMPLE_URL, logger as index_logger
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
+index_logger.setLevel(logging.INFO)
 
 def asyncio_run(coro):
     if sys.version_info < (3, 11):
@@ -84,7 +77,6 @@ class Package:
 
 class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     transport: AsyncHTTPTransport
-    cache: Cache
     env: MarkerEnvironment
     user_dependencies: dict[tuple[Package, str], list[Requirement]]
     versions: dict[Package, list[str]]
@@ -100,9 +92,6 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         spinner: Spinner = None,
     ):
         # self.package_finder = PackageFinder(index_urls=index_urls)
-        self.cache = Cache(
-            Path("~/.cache/rustine").expanduser(), refresh_versions=False
-        )
         if not env:
             self.env = MarkerEnvironment.current()
         else:
@@ -141,47 +130,18 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         ]
 
     def available_versions(self, package: Package):
-        cached = self.versions.get(package)
-        if cached:
-            return cached
-        versions = self._fetch_available_versions(package)
-        self.versions[package] = versions
+        # TODO filter with requires_python & arch
+        if package.name == '.':
+            return ['0.0.0']
+        def keep(v: Version):
+            return self.allow_pre or not v.any_prerelease()
+
+        versions = self.versions.get(package)
+        if not versions:
+            versions =  [str(v) for v in get_project_versions(PYPI_SIMPLE_URL, package.name) if keep(v)]
+            self.versions[package] = versions
         return versions
 
-    def _fetch_available_versions(self, package):
-        if package.name == ".":
-            versions = ["0.0.0"]
-        else:
-            retry = 2
-            while retry:  # loop = asyncio.get_running_loop()
-                try:
-                    results = asyncio_run(
-                        self._fetch_releases(package.name, self.cache)
-                    )
-                    break
-                except RuntimeError as error:
-                    print(f" ouch! {error} {package}", file=sys.stderr)
-                    if retry:
-                        retry -= 1
-                        continue
-                    print(f" die! {error} {package}", file=sys.stderr)
-                    raise
-            versions = []
-            for v in results:
-                try:
-                    if Version(v).any_prerelease() and (
-                        not self.allow_pre
-                        or self.allow_pre is not True
-                        and package.name in self.allow_pre
-                    ):
-                        continue
-                except Exception:
-                    # print("ouch!", package, error, file=sys.stderr)
-                    continue
-                versions.append(v)  # Cross binary
-        versions = list(reversed(versions))
-        logger.debug("available-versions: %s (%d)", package, len(versions))
-        return versions
 
     def _filter_dependencies(
         self, package: Package, version, dependencies: list[Requirement]
@@ -220,71 +180,30 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         if package.name == ".":
             reqs = self.user_dependencies.get((package, str(version)), [])
         else:
-            reqs = [dep for dep in self._fetch_dependencies(package, version)]
+            reqs = get_project_version_dependencies(PYPI_SIMPLE_URL, package.name, version)
         logger.debug("get-dependencies: raw: %s", reqs)
 
         return dict(self._filter_dependencies(package, version, reqs))
 
-    def _fetch_dependencies(self, package: Package, version):
-        retry = 2
-        # loop = asyncio.get_running_loop()
-        while retry:
-            try:
-                result = asyncio_run(
-                    self._fetch_metadata(package.name, version, self.cache)
-                )
-                break
-            except RuntimeError as error:
-                if retry:
-                    retry -= 1
-                    continue
-                print(f" error: {error} {package} {version}")
-                raise
-        data = json.loads(result)
+    # async def _fetch_metadata(self, package, version, cache):
+    #     timeout = httpx.Timeout(10.0, connect=10.0)
+    #     http_proxy = os.getenv("http_proxy")
+    #     https_proxy = os.getenv("https_proxy")
+    #     proxies = None
+    #     if http_proxy and https_proxy:
+    #         if http_proxy != https_proxy:
+    #             proxies = {"http://": http_proxy, "https://": https_proxy}
+    #         else:
+    #             proxies = http_proxy
+    #     else:
+    #         proxies = http_proxy or https_proxy
 
-        for req in data["info"]["requires_dist"] or []:
-            req = parse_requirement_fixup(req, None)
-            req = normalize_requirement(req)
-            yield req
+    #     async with AsyncClient(
+    #         proxies=proxies, http2=True, transport=self.transport, timeout=timeout
+    #     ) as client:
+    #         result = await get_metadata(client, package, version, cache)
+    #     return result
 
-    async def _fetch_metadata(self, package, version, cache):
-        timeout = httpx.Timeout(10.0, connect=10.0)
-        http_proxy = os.getenv("http_proxy")
-        https_proxy = os.getenv("https_proxy")
-        proxies = None
-        if http_proxy and https_proxy:
-            if http_proxy != https_proxy:
-                proxies = {"http://": http_proxy, "https://": https_proxy}
-            else:
-                proxies = http_proxy
-        else:
-            proxies = http_proxy or https_proxy
-
-        async with AsyncClient(
-            proxies=proxies, http2=True, transport=self.transport, timeout=timeout
-        ) as client:
-            result = await get_metadata(client, package, version, cache)
-        return result
-
-    async def _fetch_releases(self, package, cache):
-        timeout = httpx.Timeout(10.0, connect=10.0)
-        http_proxy = os.getenv("http_proxy")
-        https_proxy = os.getenv("https_proxy")
-        proxies = None
-        if http_proxy and https_proxy:
-            if http_proxy != https_proxy:
-                proxies = {"http://": http_proxy, "https://": https_proxy}
-            else:
-                proxies = http_proxy
-        else:
-            proxies = http_proxy or https_proxy
-        async with AsyncClient(
-            proxies=proxies, http2=True, transport=self.transport, timeout=timeout
-        ) as client:
-            raw = await get_releases_raw(client, package, cache)
-            data = json_stream.load(io.StringIO(raw))
-            versions = list(data["versions"])
-        return versions
 
 
 def normalize_requirement(req):
@@ -379,7 +298,8 @@ def resolve(
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--spinner/--no-spinner", is_flag=True)
 @click.option("--requirements", "-r", type=click.File("r"), default=None)
-def main(requirements, python, output, index_url, debug, quiet, verbose, spinner):
+@click.option("--pyproject", "-p", type=click.Path(file_okay=True, dir_okay=False), default=None)
+def main(requirements, pyproject, python, output, index_url, debug, quiet, verbose, spinner):
     if debug or verbose:
         logging.basicConfig(level=logging.INFO)
 
@@ -388,11 +308,14 @@ def main(requirements, python, output, index_url, debug, quiet, verbose, spinner
         else:
             logger.setLevel(logging.INFO)
     reqs = []
+    if not pyproject:
+        pyproject = "pyproject.toml"
+
     if requirements is None:
         try:
             if verbose:
-                print("try reading from pyproject.toml", file=sys.stderr)
-            with open("pyproject.toml", "rb") as f:
+                print("try reading from %s" % pyproject, file=sys.stderr)
+            with open(pyproject, "rb") as f:
                 project = tomli.load(f)
             requirements = project["project"].get("dependencies", [])
         except Exception as error:
