@@ -1,4 +1,8 @@
 from __future__ import annotations
+
+import email
+import json
+import subprocess
 import typing
 
 try:
@@ -19,17 +23,28 @@ from dataclasses import dataclass
 
 import click
 import tomli
-from httpx import AsyncClient, AsyncHTTPTransport
+from logzero import logger
 from progress.spinner import PixelSpinner as Spinner
-from pubgrub import MarkerEnvironment, Requirement, Version, VersionSpecifier
+from pubgrub import (
+    MarkerEnvironment,
+    Requirement,
+    Version,
+    VersionSpecifier,
+    VersionSpecifiers,
+)
 from pubgrub import resolve as pubgrub_resolve
 from pubgrub.provider import AbstractDependencyProvider
-from rustine.tools import normalize
-from rustine.package_index import get_project_versions, get_project_version_dependencies, PYPI_SIMPLE_URL, logger as index_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-index_logger.setLevel(logging.INFO)
+from rustine.package_index import (
+    choose_sdist_for_version,
+    choose_wheel_for_version,
+    fetch_sdist_metadata,
+    fetch_wheel_metadata,
+    get_project_versions,
+    DEFAULT_CACHE
+)
+from rustine.tools import normalize
+
 
 def asyncio_run(coro):
     if sys.version_info < (3, 11):
@@ -76,19 +91,23 @@ class Package:
 
 
 class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
-    transport: AsyncHTTPTransport
+    index_urls: list[str]
     env: MarkerEnvironment
     user_dependencies: dict[tuple[Package, str], list[Requirement]]
     versions: dict[Package, list[str]]
     spinner: Spinner | None = None
     iterations: int = 0
     allow_pre: bool | list[str]
+    refresh: bool
+    no_cache: bool
 
     def __init__(
         self,
         index_urls,
         env: MarkerEnvironment | None = None,
         allow_pre: bool | list[str] | None = None,
+        refresh: bool = False,
+        no_cache: bool = False,
         spinner: Spinner = None,
     ):
         # self.package_finder = PackageFinder(index_urls=index_urls)
@@ -97,12 +116,18 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         else:
             self.env = env
         self.user_dependencies = dict()
-        self.client = AsyncClient()
         self.versions = dict()
-        self.spinner = spinner
+        if spinner:
+            self.spinner = Spinner()
+        else:
+            self.spinner = None
         allow_pre = allow_pre or False
         self.allow_pre = allow_pre
-        self.transport = AsyncHTTPTransport(retries=3)
+        self.refresh = refresh
+        self.no_cache = no_cache
+        if not index_urls:
+            index_urls = ["https://pypi.org/simple"]
+        self.index_urls = index_urls
 
     def should_cancel(self):
         # get a chance to catch KeyboardInterrupt
@@ -129,19 +154,67 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             ensure(req) for req in requirements
         ]
 
-    def available_versions(self, package: Package):
-        # TODO filter with requires_python & arch
-        if package.name == '.':
-            return ['0.0.0']
-        def keep(v: Version):
-            return self.allow_pre or not v.any_prerelease()
+    def remove_dependencies(self, package: Package, version: str):
+        logger.debug("remove-dependencies: (%r, %r)", package, version)
+
+        del self.user_dependencies[(package, version)]
+
+    def available_versions(self, package: Package, refresh=None, no_cache=None):
+        logger.debug("available-versions: %s", package.name)
+        if refresh is None:
+            refresh = self.refresh
+        if no_cache is None:
+            no_cache = self.no_cache
+
+        if package.name == ".":
+            return ["0.0.0"]
+
+        python_version = self.env.python_version.version
+
+        def keep(v: Version, requires_python):
+            if v.any_prerelease() and not self.allow_pre:
+                logger.debug("skipping prerelease: %s %s", package.name, v)
+                return False
+            if requires_python:
+                try:
+                    requires_python = VersionSpecifiers(requires_python)
+                except Exception as error:
+                    logger.warning(
+                        "%s: could not parse python version specifier: %s %s",
+                        package.name,
+                        requires_python,
+                        error,
+                    )
+                    # return True
+                    raise
+                if not any(vs.contains(python_version) for vs in requires_python):
+                    logger.debug(
+                        "version %s for package not compatible with %s (%s)",
+                        v,
+                        package,
+                        python_version,
+                        requires_python,
+                    )
+                    return False
+            return True
 
         versions = self.versions.get(package)
-        if not versions:
-            versions =  [str(v) for v in get_project_versions(PYPI_SIMPLE_URL, package.name) if keep(v)]
-            self.versions[package] = versions
-        return versions
+        if versions:
+            # logger.debug("got versions from cache: %s", package)
+            return versions
 
+        all_versions = get_project_versions(
+            self.index_urls[0],
+            package.name,
+            refresh=refresh,
+            no_cache=no_cache,
+        )
+        logger.debug("all version: %s", all_versions)
+        versions = [
+            str(v) for (v, requires_python) in all_versions if keep(v, requires_python)
+        ]
+        self.versions[package] = versions
+        return versions
 
     def _filter_dependencies(
         self, package: Package, version, dependencies: list[Requirement]
@@ -174,16 +247,70 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             item = Package(name, frozenset(extras or [])), []
             yield item
 
-    def get_dependencies(self, package: Package, version):
+    def get_dependencies(
+        self, package: Package, version: Version, refresh=False, no_cache=False
+    ):
         version = str(version)
         logger.debug("get-dependencies: %r, %r", package, version)
         if package.name == ".":
             reqs = self.user_dependencies.get((package, str(version)), [])
         else:
-            reqs = get_project_version_dependencies(PYPI_SIMPLE_URL, package.name, version)
-        logger.debug("get-dependencies: raw: %s", reqs)
+            wheel = choose_wheel_for_version(
+                self.index_urls[0],
+                package.name,
+                version,
+                env=self.env,
+                refresh=refresh,
+                no_cache=no_cache,
+            )
+            if not wheel:
+                sdist = choose_sdist_for_version(
+                    self.index_urls[0],
+                    package.name,
+                    version,
+                    env=self.env,
+                    refresh=refresh,
+                    no_cache=no_cache,
+                )
+                data = DEFAULT_CACHE.get(sdist["url"])
+                if not data:
+                    data = fetch_sdist_metadata(
+                        package.name, version, sdist["filename"], sdist["url"]
+                    )
+                    DEFAULT_CACHE.set(sdist["url"], data)
 
+            else:
+                data = DEFAULT_CACHE.get(wheel["url"])
+                if not data:
+                    data = fetch_wheel_metadata(
+                        package.name, version, wheel["filename"], wheel["url"]
+                    )
+                    DEFAULT_CACHE.set(wheel["url"], data)
+
+            message = email.message_from_bytes(data)
+            reqs = message.get_all("requires-dist")
+            if reqs is None:
+                reqs = []
+
+            # reqs = get_project_version_dependencies(
+            #   PYPI_SIMPLE_URL,
+            #   package.name, version, refresh=refresh, no_cache=no_cache
+            # )
         return dict(self._filter_dependencies(package, version, reqs))
+
+    def resolve(self, dependencies: list[str | Requirement]):
+        p = Package(".")
+        v = "0.0.0"
+        self.add_dependencies(p, v, dependencies)
+        if self.spinner:
+            self.spinner.start()
+        try:
+            solution = pubgrub_resolve(self, p, v)
+            return solution
+        finally:
+            self.remove_dependencies(p, v)
+            if self.spinner:
+                self.spinner.finish()
 
     # async def _fetch_metadata(self, package, version, cache):
     #     timeout = httpx.Timeout(10.0, connect=10.0)
@@ -205,10 +332,20 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     #     return result
 
 
-
 def normalize_requirement(req):
     marker: str | None = req.marker
-    if marker and (" in " in marker):
+    if marker:
+        marker = normalize_python_specifier(marker)
+
+        sreq, _ = str(req).split(";")
+        sreq = sreq.strip()
+        req = Requirement(f"{sreq}; {marker}")
+        # print(f"XXX: {req}")
+    return req
+
+
+def normalize_python_specifier(marker: str):
+    if " in " in marker:
         connector = " or "
         operator = "=="
         symbol, versions = marker.split(" in ")
@@ -222,11 +359,7 @@ def normalize_requirement(req):
         marker = connector.join(
             f"{symbol} {operator} {delim}{version}{delim}" for version in versions
         )
-        sreq, _ = str(req).split(";")
-        sreq = sreq.strip()
-        req = Requirement(f"{sreq}; {marker}")
-        # print(f"XXX: {req}")
-    return req
+    return marker
 
 
 # start = time.time()
@@ -267,49 +400,50 @@ SAMPLE = [
 ]
 
 
-def resolve(
-    dependencies: list[str], index_urls: list[str] = None, spinner: bool = None
-):
-    if spinner:
-        spinner = Spinner()
-    else:
-        spinner = None
-    if not index_urls:
-        index_urls = ["https://pypi.org/simple"]
-
-    dp = DependencyProvider(index_urls, spinner=spinner)
-    p = Package(".")
-    v = "0.0.0"
-    dp.add_dependencies(p, v, dependencies)
-    if spinner:
-        spinner.start()
-    solution = pubgrub_resolve(dp, p, v)
-    if spinner:
-        spinner.finish()
-    return solution
-
-
 @click.command()
-@click.option("--python", type=click.Path(), default=None)
-@click.option("--output", "-o", type=click.Path(), default=None)
-@click.option("--index-url", multiple=True)
 @click.option("--debug", "-d", is_flag=True)
 @click.option("--quiet", "-q", is_flag=True)
 @click.option("--verbose", "-v", is_flag=True)
-@click.option("--spinner/--no-spinner", is_flag=True)
+@click.option("--index-url", multiple=True)
+@click.option("--python", type=click.Path(), default=None)
+@click.option("--pre", is_flag=True)
+@click.option("--pip-args")
 @click.option("--requirements", "-r", type=click.File("r"), default=None)
-@click.option("--pyproject", "-p", type=click.Path(file_okay=True, dir_okay=False), default=None)
-def main(requirements, pyproject, python, output, index_url, debug, quiet, verbose, spinner):
-    if debug or verbose:
-        logging.basicConfig(level=logging.INFO)
-
-        if debug:
-            logger.setLevel(logging.DEBUG)
-        else:
-            logger.setLevel(logging.INFO)
+@click.option(
+    "--pyproject", "-p", type=click.Path(file_okay=True, dir_okay=False), default=None
+)
+@click.option("--output", "-o", type=click.Path(), default=None)
+@click.option("--spin/--no-spin", is_flag=True)
+def main(
+    requirements,
+    pyproject,
+    python,
+    pre,
+    output,
+    index_url,
+    debug,
+    quiet,
+    pip_args,
+    verbose,
+    spin,
+):
+    logging.basicConfig(level=logging.INFO)
+    logger.setLevel(logging.INFO)
+    if debug:
+        logger.setLevel(logging.DEBUG)
     reqs = []
     if not pyproject:
         pyproject = "pyproject.toml"
+    logger.debug("pip_args: %s", pip_args)
+    logger.debug("python: %s", python)
+    logger.debug("output: %r", output)
+
+    if python:
+        if python.startswith('"') and python.endswith('"'):
+            python = python[1:-1]
+        env = get_markers_from_executable(python)
+    else:
+        env = MarkerEnvironment.current()
 
     if requirements is None:
         try:
@@ -345,8 +479,12 @@ def main(requirements, pyproject, python, output, index_url, debug, quiet, verbo
         if line.startswith("-"):
             # print("TODO:", line, file=sys.stderr)
             continue
-        reqs.append(line)
-    solution = resolve(reqs, index_url, spinner)
+        reqs.append(line),
+
+    provider = DependencyProvider(index_url, env, allow_pre=pre, spinner=spin)
+
+    solution = provider.resolve(reqs)
+
     if output:
         file = open(output, "w")
     else:
@@ -356,12 +494,63 @@ def main(requirements, pyproject, python, output, index_url, debug, quiet, verbo
         key=lambda p: p.name.lower(),
     ):
         print(f"{p}=={solution[p]}", file=file)
+        if verbose and file != sys.stdout:
+            print(f"{p}=={solution[p]}", file=sys.stderr)
+
     if output:
+        file.flush()
         file.close()
 
 
+CAPTURE_MARKERS_SCRIPT = """
+import os
+import sys
+import platform
+import json
+def format_full_version(info):
+    version = '{0.major}.{0.minor}.{0.micro}'.format(info)
+    kind = info.releaselevel
+    if kind != 'final':
+        version += kind[0] + str(info.serial)
+    return version
+
+if hasattr(sys, 'implementation'):
+    implementation_version = format_full_version(sys.implementation.version)
+    implementation_name = sys.implementation.name
+else:
+    implementation_version = '0'
+    implementation_name = ''
+bindings = {
+    'implementation_name': implementation_name,
+    'implementation_version': implementation_version,
+    'os_name': os.name,
+    'platform_machine': platform.machine(),
+    'platform_python_implementation': platform.python_implementation(),
+    'platform_release': platform.release(),
+    'platform_system': platform.system(),
+    'platform_version': platform.version(),
+    'python_full_version': platform.python_version(),
+    'python_version': '.'.join(platform.python_version_tuple()[:2]),
+    'sys_platform': sys.platform,
+}
+json.dump(bindings, sys.stdout)
+sys.stdout.flush()
+"""
+
+
+def get_markers_from_executable(python):
+    p = subprocess.run(
+        [python],
+        input=CAPTURE_MARKERS_SCRIPT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return MarkerEnvironment(**json.loads(p.stdout))
+
+
 def test():
-    resolve(SAMPLE)
+    DependencyProvider().resolve(SAMPLE)
 
 
 if __name__ == "__main__":

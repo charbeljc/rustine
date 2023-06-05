@@ -1,14 +1,13 @@
-import logging
-import os
-import random
 import re
 from pathlib import Path
-from typing import Optional, NewType
-from pubgrub import Requirement, Pep508Error
+from typing import BinaryIO, NewType, Optional
+
+import requests
+from logzero import logger
+from pubgrub import Pep508Error, Requirement
 
 MINIMUM_SUPPORTED_PYTHON_MINOR = 7
 
-logger = logging.getLogger(__name__)
 user_agent = "monotrail-resolve-prototype/0.0.1-dev1+cat <konstin@mailbox.org>"
 base_dir = Path(__file__).parent.parent
 default_cache_dir = base_dir.joinpath("cache")
@@ -19,60 +18,6 @@ NormalizedName = NewType("NormalizedName", str)
 
 def normalize(name: str) -> NormalizedName:
     return NormalizedName(normalizer.sub("-", name).lower())
-
-
-class Cache:
-    """Quick and simple cache abstraction that can be turned off for the tests"""
-
-    root_cache_dir: Path
-    read: bool
-    write: bool
-    refresh_versions: bool
-
-    def __init__(
-        self,
-        root_cache_dir: Path,
-        read: bool = True,
-        write: bool = True,
-        refresh_versions: bool = False,
-    ):
-        self.root_cache_dir = root_cache_dir
-        self.read = read
-        self.write = write
-        self.refresh_versions = refresh_versions
-
-    def filename(self, bucket: str, name: str) -> Path:
-        return self.root_cache_dir.joinpath(bucket).joinpath(name)
-
-    def get_filename(self, bucket: str, name: str) -> Optional[Path]:
-        """Middle abstraction for rust bridging"""
-        if not self.read:
-            return None
-
-        return self.filename(bucket, name)
-
-    def get(self, bucket: str, name: str) -> Optional[str]:
-        if not self.read:
-            return None
-
-        filename = self.filename(bucket, name)
-        # Avoid an expensive is_file call
-        try:
-            return filename.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            return None
-
-    def set(self, bucket: str, name: str, content: str):
-        if not self.write:
-            return False
-        filename = self.filename(bucket, name)
-        filename.parent.mkdir(exist_ok=True, parents=True)
-        # tempfile to avoid broken cache entry
-        characters = "abcdefghijklmnopqrstuvwxyz0123456789_"
-        temp_name = "".join(random.choices(characters, k=8))
-        temp_file = filename.parent.joinpath(temp_name)
-        temp_file.write_text(content, encoding="utf-8")
-        os.replace(temp_file, filename)
 
 
 def parse_requirement_fixup(
@@ -102,3 +47,73 @@ def parse_requirement_fixup(
             pass
         # Didn't work with the fixup either? raise the error with the original string
         raise
+
+
+class RemoteZipFile(BinaryIO):
+    """Pretend local zip file that is actually querying the pypi for the exact ranges of
+    the file. Requirement is that the server supports range requests
+    (https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests)
+
+    Only implements the methods actually called by zipfile for what we do, we're lying
+    about the type here
+
+    Adapted to requests from konstin/monotrail-resolve
+    """
+
+    url: str
+    pos: int
+    len: int
+    user_agent = user_agent
+
+    def __init__(self, client: requests.Session, url: str):
+        self.url = url
+        self.pos = 0
+        self.client = client
+
+        response = self.client.head(self.url, headers={"user-agent": self.user_agent})
+        response.raise_for_status()
+        accept_ranges = response.headers.get("accept-ranges")
+        assert accept_ranges == "bytes", (
+            f"The server needs to `accept-ranges: bytes`, "
+            f"but it says {accept_ranges} for {url}"
+        )
+        self.len = int(response.headers["content-length"])
+
+    def seekable(self):
+        return True
+
+    def seek(self, offset: int, whence: int = 0):
+        logger.debug("seek offset: %s, whence: %s", offset, whence)
+        if whence == 0:
+            self.pos = offset
+        elif whence == 1:
+            self.pos += offset
+        elif whence == 2:
+            self.pos = self.len + offset
+        else:
+            raise ValueError(f"whence must be 0, 1 or 2 but it's {whence}")
+        return self.pos
+
+    def tell(self):
+        return self.pos
+
+    def read(self, size: Optional[int] = None):
+        # Here we could also use an end-open range, but we already have the information,
+        # so let's keep track locally (which we when in doubt we can trust over the
+        # server)
+        logger.debug("read size: %s", size)
+        if size:
+            read_len = size
+        else:
+            read_len = self.len - self.pos
+        # HTTP Ranges are zero-indexed and inclusive
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Range_requests
+        headers = {
+            "Range": f"bytes={self.pos}-{self.pos + read_len - 1}",
+            "user-agent": self.user_agent,
+        }
+        response = self.client.get(self.url, headers=headers)
+        data = response.content
+        self.pos += read_len
+        return data

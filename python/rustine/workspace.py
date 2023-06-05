@@ -111,7 +111,9 @@ def edit_workdir_metadata(repo: git.Repo, workdir: Path, submodules, mode):
                 pyproject_edit(doc, repo, workdir, meta, submodules, mode)
 
 
-def cargo_edit(doc: TOMLDocument, repo: git.Repo, workdir: Path, meta: Path, submodules, mode):
+def cargo_edit(
+    doc: TOMLDocument, repo: git.Repo, workdir: Path, meta: Path, submodules, mode
+):
     workspace = Path(repo.working_dir)
     deps = doc.get("dependencies")
     edited = False
@@ -228,7 +230,9 @@ def poetry_to_req(doc: TOMLDocument, dev=False):
                 print(package, v.replace("^", "~="))
 
 
-def edit_workspace_metadata(repo: git.Repo, workdir: Path, members: list[str], submodules, mode):
+def edit_workspace_metadata(
+    repo: git.Repo, workdir: Path, members: list[str], submodules, mode
+):
     for member in members:
         edit_workdir_metadata(repo, workdir.joinpath(member), submodules, mode)
 
