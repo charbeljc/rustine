@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import email
 import json
+from pathlib import Path
 import subprocess
 import typing
+from urllib.parse import urlparse
 
 try:
     import sys
@@ -41,7 +43,7 @@ from rustine.package_index import (
     fetch_sdist_metadata,
     fetch_wheel_metadata,
     get_project_versions,
-    DEFAULT_CACHE
+    DEFAULT_CACHE,
 )
 from rustine.tools import normalize
 
@@ -94,6 +96,7 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     index_urls: list[str]
     env: MarkerEnvironment
     user_dependencies: dict[tuple[Package, str], list[Requirement]]
+    source_packages: dict[Package, str]
     versions: dict[Package, list[str]]
     spinner: Spinner | None = None
     iterations: int = 0
@@ -115,16 +118,21 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             self.env = MarkerEnvironment.current()
         else:
             self.env = env
+
         self.user_dependencies = dict()
         self.versions = dict()
+        self.source_packages = dict()
+
         if spinner:
             self.spinner = Spinner()
         else:
             self.spinner = None
+
         allow_pre = allow_pre or False
         self.allow_pre = allow_pre
         self.refresh = refresh
         self.no_cache = no_cache
+
         if not index_urls:
             index_urls = ["https://pypi.org/simple"]
         self.index_urls = index_urls
@@ -159,6 +167,10 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
         del self.user_dependencies[(package, version)]
 
+    def register_package_url(self, package: Package, url: str):
+        logger.warning("register-package-url: %s, %s", package, url)
+        self.source_packages[package] = url
+
     def available_versions(self, package: Package, refresh=None, no_cache=None):
         logger.debug("available-versions: %s", package.name)
         if refresh is None:
@@ -168,6 +180,9 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
         if package.name == ".":
             return ["0.0.0"]
+
+        if package in self.source_packages:
+            return ["0.1.0"]
 
         python_version = self.env.python_version.version
 
@@ -189,7 +204,7 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
                     raise
                 if not any(vs.contains(python_version) for vs in requires_python):
                     logger.debug(
-                        "version %s for package not compatible with %s (%s)",
+                        "version %s for package %s not compatible with %s (%s)",
                         v,
                         package,
                         python_version,
@@ -234,16 +249,20 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         type_ = type(version_spec)
         if type_ is str:
             # url = parse_url(version_spec)
-            item = Package(name, frozenset(extras or [])), version_spec
-            logger.debug("package: %s version: %s, dep: %s", package, version, item)
+            dep_package = Package(name, frozenset(extras or []))
+
+            item = dep_package, version_spec
+            logger.warning("package: %s version: %r, dep: %s", package, version, item)
+            self.register_package_url(dep_package, version_spec)
             yield item
         elif type_ is list:
             version_spec = [vs2tuple(vs) for vs in version_spec or []]
             item = Package(name, frozenset(extras or [])), version_spec
-            logger.debug("package: %s version: %s, dep: %s", package, version, item)
+            logger.debug("package: %s version: %r, dep: %s", package, version, item)
             yield item
         else:
-            logger.debug("package: %s version: %s", package, version_spec)
+            assert version_spec is None
+            logger.debug("package: %s version: %r", package, version_spec)
             item = Package(name, frozenset(extras or [])), []
             yield item
 
@@ -252,8 +271,26 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     ):
         version = str(version)
         logger.debug("get-dependencies: %r, %r", package, version)
+
         if package.name == ".":
             reqs = self.user_dependencies.get((package, str(version)), [])
+
+        elif package in self.source_packages:
+            url = urlparse(self.source_packages[package])
+            if url.scheme == "file":
+                path = Path(url.path)
+                if not path.is_dir():
+                    raise FileNotFoundError(path)
+                pyproject = path.joinpath("pyproject.toml")
+                with open(pyproject, "rb") as f:
+                    data = tomli.load(f)
+                return data["project"].get("dependencies", [])
+            else:
+                raise NotImplementedError(
+                    f"TODO: get dependency for {package}, "
+                    f"url: {self.source_packages[package]}"
+                )
+
         else:
             wheel = choose_wheel_for_version(
                 self.index_urls[0],
@@ -296,7 +333,7 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             #   PYPI_SIMPLE_URL,
             #   package.name, version, refresh=refresh, no_cache=no_cache
             # )
-        return dict(self._filter_dependencies(package, version, reqs))
+        return list(self._filter_dependencies(package, version, reqs))
 
     def resolve(self, dependencies: list[str | Requirement]):
         p = Package(".")
@@ -306,6 +343,9 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             self.spinner.start()
         try:
             solution = pubgrub_resolve(self, p, v)
+            for package in solution:
+                if package in self.source_packages:
+                    solution[package] = self.source_packages[package]
             return solution
         finally:
             self.remove_dependencies(p, v)
@@ -374,21 +414,14 @@ def transform(a, v):
 VERSION_ATTRS = ["dev", "epoch", "post", "pre", "release"]
 
 
-def vs2tuple(vs: VersionSpecifier):
+def vs2tuple(vs: VersionSpecifier | str):
     if type(vs) is str:
         try:
             vs = VersionSpecifier(vs)
         except ValueError:
             print(f"PEP440: {vs}")
             raise
-    asdict = {a: transform(a, getattr(vs.version, a)) for a in VERSION_ATTRS}
-
-    try:
-        version = Version(**asdict)
-    except Exception:
-        # breakpoint()
-        raise
-    spec = (str(vs.operator), version)
+    spec = (str(vs.operator), vs.version)
     return spec
 
 
@@ -493,9 +526,15 @@ def main(
         (p for p in solution if p.name != "."),
         key=lambda p: p.name.lower(),
     ):
-        print(f"{p}=={solution[p]}", file=file)
+        if type(solution[p]) is str:
+            print(f"{p} @ {solution[p]}", file=file)
+        else:
+            print(f"{p}=={solution[p]}", file=file)
         if verbose and file != sys.stdout:
-            print(f"{p}=={solution[p]}", file=sys.stderr)
+            if type(solution[p]) is str:
+                print(f"{p} @ {solution[p]}", file=sys.stderr)
+            else:
+                print(f"{p}=={solution[p]}", file=sys.stderr)
 
     if output:
         file.flush()
