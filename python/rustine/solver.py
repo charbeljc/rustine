@@ -322,8 +322,8 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         for dep in dependencies:
             yield from self._filter_dependency(package, version, dep)
 
-    def _filter_dependency(self, package: Package, version, dep: Requirement):
-        dep = Requirement(str(dep))  # Cross binary boundary
+    def _filter_dependency(self, package: Package, version, dep: str | Requirement):
+        dep = fixup_requirement(dep)
         logger.debug("filtering: (%s %s): %s", package, version, dep)
         if not dep.evaluate_markers(self.env, list(package.extras or [])):
             logger.debug("rejected by env: %s", dep)
@@ -407,7 +407,7 @@ def normalize_python_specifier(marker: str):
         marker = connector.join(
             f"{symbol} {operator} {delim}{version}{delim}" for version in versions
         )
-    return marker
+    return f"({marker})"
 
 
 # start = time.time()
