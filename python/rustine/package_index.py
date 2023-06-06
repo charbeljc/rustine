@@ -37,6 +37,7 @@ ARCH_TAGS = [
     "ppc64le",
     "amd64",
     "armv7l",
+    "ppc64",
 ]
 
 PLATFORM_TAGS = {
@@ -78,6 +79,12 @@ def pytag2tuple(tag):
         if not minor:
             return "cypthon", Version(major)
         return "cpython", Version(f"{major}.{minor}")
+    elif tag.startswith("pp"):
+        major = tag[2]
+        minor = tag[3:]
+        if not minor:
+            return "pypy", Version(major)
+        return "pypy", Version(f"{major}.{minor}")
     elif tag.startswith("py"):
         major = tag[2]
         minor = tag[3:]

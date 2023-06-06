@@ -17,7 +17,6 @@ try:
 except ImportError:
     import sys
 
-import asyncio
 
 # from urllib3.util.url import parse_url
 import logging
@@ -46,14 +45,6 @@ from rustine.package_index import (
     DEFAULT_CACHE,
 )
 from rustine.tools import normalize
-
-
-def asyncio_run(coro):
-    if sys.version_info < (3, 11):
-        return asyncio.run(coro)
-    else:
-        with asyncio.Runner() as runner:
-            return runner.run(coro)
 
 
 @dataclass(order=True, unsafe_hash=True)
@@ -137,16 +128,6 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             index_urls = ["https://pypi.org/simple"]
         self.index_urls = index_urls
 
-    def should_cancel(self):
-        # get a chance to catch KeyboardInterrupt
-        self.iterations += 1
-        try:
-            if self.spinner:
-                self.spinner.next()
-        except KeyboardInterrupt:
-            print("Interrupted!")
-            raise
-
     def add_dependencies(
         self, package: Package, version: str, requirements: list[Requirement | str]
     ):
@@ -167,8 +148,35 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
         del self.user_dependencies[(package, version)]
 
+    def resolve(self, dependencies: list[str | Requirement]):
+        p = Package(".")
+        v = "0.0.0"
+        self.add_dependencies(p, v, dependencies)
+        if self.spinner:
+            self.spinner.start()
+        try:
+            solution = pubgrub_resolve(self, p, v)
+            for package in solution:
+                if package in self.source_packages:
+                    solution[package] = self.source_packages[package]
+            return solution
+        finally:
+            self.remove_dependencies(p, v)
+            if self.spinner:
+                self.spinner.finish()
+
+    def should_cancel(self):
+        # get a chance to catch KeyboardInterrupt
+        self.iterations += 1
+        try:
+            if self.spinner:
+                self.spinner.next()
+        except KeyboardInterrupt:
+            print("Interrupted!")
+            raise
+
     def register_package_url(self, package: Package, url: str):
-        logger.warning("register-package-url: %s, %s", package, url)
+        logger.debug("register-package-url: %s, %s", package, url)
         self.source_packages[package] = url
 
     def available_versions(self, package: Package, refresh=None, no_cache=None):
@@ -231,41 +239,6 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         self.versions[package] = versions
         return versions
 
-    def _filter_dependencies(
-        self, package: Package, version, dependencies: list[Requirement]
-    ) -> iter[tuple[Package, list]]:
-        for dep in dependencies:
-            yield from self._filter_dependency(package, version, dep)
-
-    def _filter_dependency(self, package: Package, version, dep: Requirement):
-        dep = Requirement(str(dep))  # Cross binary boundary
-        logger.debug("filtering: (%s %s): %s", package, version, dep)
-        if not dep.evaluate_markers(self.env, list(package.extras or [])):
-            logger.debug("rejected by env: %s", dep)
-            return
-        name = dep.name
-        extras = dep.extras
-        version_spec = dep.version_or_url
-        type_ = type(version_spec)
-        if type_ is str:
-            # url = parse_url(version_spec)
-            dep_package = Package(name, frozenset(extras or []))
-
-            item = dep_package, version_spec
-            logger.warning("package: %s version: %r, dep: %s", package, version, item)
-            self.register_package_url(dep_package, version_spec)
-            yield item
-        elif type_ is list:
-            version_spec = [vs2tuple(vs) for vs in version_spec or []]
-            item = Package(name, frozenset(extras or [])), version_spec
-            logger.debug("package: %s version: %r, dep: %s", package, version, item)
-            yield item
-        else:
-            assert version_spec is None
-            logger.debug("package: %s version: %r", package, version_spec)
-            item = Package(name, frozenset(extras or [])), []
-            yield item
-
     def get_dependencies(
         self, package: Package, version: Version, refresh=False, no_cache=False
     ):
@@ -273,7 +246,10 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         logger.debug("get-dependencies: %r, %r", package, version)
 
         if package.name == ".":
-            reqs = self.user_dependencies.get((package, str(version)), [])
+            reqs = [
+                fixup_requirement(req)
+                for req in self.user_dependencies.get((package, str(version)), [])
+            ]
 
         elif package in self.source_packages:
             url = urlparse(self.source_packages[package])
@@ -284,7 +260,10 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
                 pyproject = path.joinpath("pyproject.toml")
                 with open(pyproject, "rb") as f:
                     data = tomli.load(f)
-                return data["project"].get("dependencies", [])
+                return [
+                    fixup_requirement(req)
+                    for req in data["project"].get("dependencies", [])
+                ]
             else:
                 raise NotImplementedError(
                     f"TODO: get dependency for {package}, "
@@ -325,7 +304,9 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
                     DEFAULT_CACHE.set(wheel["url"], data)
 
             message = email.message_from_bytes(data)
-            reqs = message.get_all("requires-dist")
+            reqs = [
+                fixup_requirement(req) for req in message.get_all("requires-dist") or []
+            ]
             if reqs is None:
                 reqs = []
 
@@ -335,22 +316,41 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             # )
         return list(self._filter_dependencies(package, version, reqs))
 
-    def resolve(self, dependencies: list[str | Requirement]):
-        p = Package(".")
-        v = "0.0.0"
-        self.add_dependencies(p, v, dependencies)
-        if self.spinner:
-            self.spinner.start()
-        try:
-            solution = pubgrub_resolve(self, p, v)
-            for package in solution:
-                if package in self.source_packages:
-                    solution[package] = self.source_packages[package]
-            return solution
-        finally:
-            self.remove_dependencies(p, v)
-            if self.spinner:
-                self.spinner.finish()
+    def _filter_dependencies(
+        self, package: Package, version, dependencies: list[Requirement]
+    ) -> iter[tuple[Package, list]]:
+        for dep in dependencies:
+            yield from self._filter_dependency(package, version, dep)
+
+    def _filter_dependency(self, package: Package, version, dep: Requirement):
+        dep = Requirement(str(dep))  # Cross binary boundary
+        logger.debug("filtering: (%s %s): %s", package, version, dep)
+        if not dep.evaluate_markers(self.env, list(package.extras or [])):
+            logger.debug("rejected by env: %s", dep)
+            return
+        name = dep.name
+        extras = dep.extras
+        version_spec = dep.version_or_url
+        type_ = type(version_spec)
+        if type_ is str:
+            # url = parse_url(version_spec)
+            dep_package = Package(name, frozenset(extras or []))
+
+            item = dep_package, version_spec
+            logger.debug("package: %s version: %r, dep: %s", package, version, item)
+            self.register_package_url(dep_package, version_spec)
+            yield item
+        elif type_ is list:
+            # breakpoint()
+            # version_spec = [vs2tuple(vs) for vs in version_spec or []]
+            item = Package(name, frozenset(extras or [])), version_spec
+            logger.debug("package: %s version: %r, dep: %s", package, version, item)
+            yield item
+        else:
+            assert version_spec is None
+            logger.debug("package: %s version: %r", package, version_spec)
+            item = Package(name, frozenset(extras or [])), []
+            yield item
 
     # async def _fetch_metadata(self, package, version, cache):
     #     timeout = httpx.Timeout(10.0, connect=10.0)
@@ -370,6 +370,14 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     #     ) as client:
     #         result = await get_metadata(client, package, version, cache)
     #     return result
+
+
+def fixup_requirement(str_or_req: str | Requirement) -> Requirement:
+    if type(str_or_req) is str:
+        req = Requirement(str_or_req)
+    else:
+        req = str_or_req
+    return normalize_requirement(req)
 
 
 def normalize_requirement(req):
@@ -438,19 +446,19 @@ SAMPLE = [
 @click.option("--quiet", "-q", is_flag=True)
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--index-url", multiple=True)
-@click.option("--python", type=click.Path(), default=None)
+@click.option("--python", default=None)
 @click.option("--pre", is_flag=True)
 @click.option("--pip-args")
 @click.option("--requirements", "-r", type=click.File("r"), default=None)
 @click.option(
-    "--pyproject", "-p", type=click.Path(file_okay=True, dir_okay=False), default=None
+    "--metadata", "-m", type=click.Path(file_okay=True, dir_okay=False), default=None
 )
 @click.option("--output", "-o", type=click.Path(), default=None)
 @click.option("--spin/--no-spin", is_flag=True)
 def main(
     requirements,
-    pyproject,
-    python,
+    metadata,
+    python: str,
     pre,
     output,
     index_url,
@@ -465,11 +473,13 @@ def main(
     if debug:
         logger.setLevel(logging.DEBUG)
     reqs = []
-    if not pyproject:
-        pyproject = "pyproject.toml"
+    if not metadata:
+        metadata = "pyproject.toml"
     logger.debug("pip_args: %s", pip_args)
     logger.debug("python: %s", python)
     logger.debug("output: %r", output)
+    if verbose:
+        print("Using python:", python, file=sys.stderr)
 
     if python:
         if python.startswith('"') and python.endswith('"'):
@@ -481,8 +491,8 @@ def main(
     if requirements is None:
         try:
             if verbose:
-                print("try reading from %s" % pyproject, file=sys.stderr)
-            with open(pyproject, "rb") as f:
+                print("Reading from %s" % metadata, file=sys.stderr)
+            with open(metadata, "rb") as f:
                 project = tomli.load(f)
             requirements = project["project"].get("dependencies", [])
         except Exception as error:
@@ -522,19 +532,24 @@ def main(
         file = open(output, "w")
     else:
         file = sys.stdout
+    print("-e file:.", file=file)
+    if verbose and file != sys.stdout:
+        print("-e file:.", file=sys.stderr)
     for p in sorted(
         (p for p in solution if p.name != "."),
         key=lambda p: p.name.lower(),
     ):
+        name = p.name
+
         if type(solution[p]) is str:
-            print(f"{p} @ {solution[p]}", file=file)
+            print(f"{name} @ {solution[p]}", file=file)
         else:
-            print(f"{p}=={solution[p]}", file=file)
+            print(f"{name}=={solution[p]}", file=file)
         if verbose and file != sys.stdout:
             if type(solution[p]) is str:
-                print(f"{p} @ {solution[p]}", file=sys.stderr)
+                print(f"{name} @ {solution[p]}", file=sys.stderr)
             else:
-                print(f"{p}=={solution[p]}", file=sys.stderr)
+                print(f"{name}=={solution[p]}", file=sys.stderr)
 
     if output:
         file.flush()
@@ -577,15 +592,15 @@ sys.stdout.flush()
 """
 
 
-def get_markers_from_executable(python):
-    p = subprocess.run(
+def get_markers_from_executable(python) -> MarkerEnvironment:
+    process = subprocess.run(
         [python],
         input=CAPTURE_MARKERS_SCRIPT,
         text=True,
         capture_output=True,
         check=True,
     )
-    return MarkerEnvironment(**json.loads(p.stdout))
+    return MarkerEnvironment(**json.loads(process.stdout))
 
 
 def test():
