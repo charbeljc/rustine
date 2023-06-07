@@ -44,35 +44,31 @@ from rustine.package_index import (
     get_project_versions,
     DEFAULT_CACHE,
 )
-from rustine.tools import normalize
+from rustine.tools import fixup_requirement, normalize, version_matches
 
 
-@dataclass(order=True, unsafe_hash=True)
+@dataclass(init=False, order=True, unsafe_hash=True)
 class Package:
     name: str
-    extras: set[str] | list[str] | None = None
+    extras: frozenset[str] | None = None
 
-    def __post_init__(self):
-        if "[" in self.name:
-            if self.extras:
-                raise ValueError(
-                    "Extra keyword should be used only when "
-                    "not specified in package name."
-                )
-            name, extras = self.name.split("]")
+    def __init__(self, spec: str, extras=None):
+        if "[" in spec and extras is not None:
+            raise TypeError("extras in name and as keyword argument")
+        if "[" in spec:
+            name, extras = spec.split("[")
             name = name.strip()
             extras = extras.strip()
             if extras[-1] != "]":
                 raise ValueError("Unterminated extras in package specification.")
-            extras = set(extra.strip() for extra in extras.split(","))
-            self.name = name
-            self.extras = extras
+            extras = extras[:-1]
+            extras = frozenset(extra.strip() for extra in extras.split(","))
+        else:
+            name = spec
+            extras = frozenset(extras) if extras else None
 
-        if type(self.extras) is list:
-            self.extras = set(self.extras)
-
-        if self.name != ".":
-            self.name = normalize(self.name)
+        self.name = normalize(name) if name != "." else "."
+        self.extras = extras
 
     def __repr__(self):
         return f"<Package({self})>"
@@ -87,13 +83,16 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     index_urls: list[str]
     env: MarkerEnvironment
     user_dependencies: dict[tuple[Package, str], list[Requirement]]
-    source_packages: dict[Package, str]
-    versions: dict[Package, list[str]]
+    source_packages: dict[Package, str]  # url
+    versions: dict[Package, list[str]]  # version
+    exclusions: dict[Package, VersionSpecifiers]
     spinner: Spinner | None = None
     iterations: int = 0
     allow_pre: bool | list[str]
     refresh: bool
     no_cache: bool
+    debug: bool
+    verbose: bool
 
     def __init__(
         self,
@@ -102,6 +101,8 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         allow_pre: bool | list[str] | None = None,
         refresh: bool = False,
         no_cache: bool = False,
+        debug: bool = False,
+        verbose: bool = False,
         spinner: Spinner = None,
     ):
         # self.package_finder = PackageFinder(index_urls=index_urls)
@@ -124,9 +125,13 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         self.refresh = refresh
         self.no_cache = no_cache
 
+        self.debug = debug
+        self.verbose = verbose
+
         if not index_urls:
             index_urls = ["https://pypi.org/simple"]
         self.index_urls = index_urls
+        self.exclusions = dict()
 
     def add_dependencies(
         self, package: Package, version: str, requirements: list[Requirement | str]
@@ -142,6 +147,27 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         self.user_dependencies[(package, version)] = [
             ensure(req) for req in requirements
         ]
+
+    def exclude(self, package: Package, version: str | VersionSpecifiers):
+        if isinstance(version, str):
+            v = VersionSpecifiers(version)
+        else:
+            v = version
+        self.exclusions[package] = v.to_pubgrub()
+
+    def excluded(self, package: Package, version: str | Version):
+        if package.name == "sigopt":
+            # breakpoint()
+            pass
+        excluded_range = self.exclusions.get(package)
+        if not excluded_range:
+            return False
+        if isinstance(version, str):
+            v = Version(version)
+        else:
+            v = version
+        excluded = excluded_range.contains(v)
+        return excluded
 
     def remove_dependencies(self, package: Package, version: str):
         logger.debug("remove-dependencies: (%r, %r)", package, version)
@@ -180,7 +206,8 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         self.source_packages[package] = url
 
     def available_versions(self, package: Package, refresh=None, no_cache=None):
-        logger.debug("available-versions: %s", package.name)
+        if self.debug and self.verbose:
+            logger.debug("available-versions: %s", package.name)
         if refresh is None:
             refresh = self.refresh
         if no_cache is None:
@@ -194,23 +221,20 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
         python_version = self.env.python_version.version
 
-        def keep(v: Version, requires_python):
-            if v.any_prerelease() and not self.allow_pre:
-                logger.debug("skipping prerelease: %s %s", package.name, v)
+        def keep(v: Version, requires_python: VersionSpecifiers | None):
+            if self.excluded(package, v):
+                ## logger.info("forbidden package version: %s %s", package, v)
                 return False
-            if requires_python:
-                try:
-                    requires_python = VersionSpecifiers(requires_python)
-                except Exception as error:
-                    logger.warning(
-                        "%s: could not parse python version specifier: %s %s",
-                        package.name,
-                        requires_python,
-                        error,
+            if not self.allow_pre and v.any_prerelease():
+                if self.debug and self.verbose:
+                    logger.debug(
+                        "version %s for package %s is a prerelease, skipping.",
+                        v,
+                        package,
                     )
-                    # return True
-                    raise
-                if not any(vs.contains(python_version) for vs in requires_python):
+                return False
+            if not version_matches(python_version, requires_python):
+                if self.debug and self.verbose:
                     logger.debug(
                         "version %s for package %s not compatible with %s (%s)",
                         v,
@@ -218,25 +242,30 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
                         python_version,
                         requires_python,
                     )
-                    return False
+                return False
             return True
 
-        versions = self.versions.get(package)
-        if versions:
-            # logger.debug("got versions from cache: %s", package)
-            return versions
-
-        all_versions = get_project_versions(
-            self.index_urls[0],
-            package.name,
-            refresh=refresh,
-            no_cache=no_cache,
-        )
-        logger.debug("all version: %s", all_versions)
+        all_versions = self.versions.get(package)
+        if all_versions:
+            logger.debug("got versions from cache: %s", package)
+        else:
+            all_versions = get_project_versions(
+                self.index_urls[0],
+                package.name,
+                refresh=refresh,
+                no_cache=no_cache,
+            )
+            self.versions[package] = all_versions
         versions = [
             str(v) for (v, requires_python) in all_versions if keep(v, requires_python)
         ]
-        self.versions[package] = versions
+        logger.debug(
+            "filtered versions: %s, count, %s, last: %s, first: %s",
+            package.name,
+            len(versions),
+            versions[0],
+            versions[-1],
+        )
         return versions
 
     def get_dependencies(
@@ -324,9 +353,11 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
     def _filter_dependency(self, package: Package, version, dep: str | Requirement):
         dep = fixup_requirement(dep)
-        logger.debug("filtering: (%s %s): %s", package, version, dep)
+        if self.debug and self.verbose:
+            logger.debug("filtering: %s", dep)
         if not dep.evaluate_markers(self.env, list(package.extras or [])):
-            logger.debug("rejected by env: %s", dep)
+            if self.debug and self.verbose:
+                logger.debug("dependency rejected by env: %s", dep)
             return
         name = dep.name
         extras = dep.extras
@@ -337,81 +368,21 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             dep_package = Package(name, frozenset(extras or []))
 
             item = dep_package, version_spec
-            logger.debug("package: %s version: %r, dep: %s", package, version, item)
+            logger.debug("package: %s version: %r via: %r", name, version_spec, dep)
             self.register_package_url(dep_package, version_spec)
             yield item
         elif type_ is list:
             # breakpoint()
             # version_spec = [vs2tuple(vs) for vs in version_spec or []]
             item = Package(name, frozenset(extras or [])), version_spec
-            logger.debug("package: %s version: %r, dep: %s", package, version, item)
+            logger.debug("package: %s version: %r via: %r", name, version_spec, dep)
             yield item
         else:
             assert version_spec is None
-            logger.debug("package: %s version: %r", package, version_spec)
+            logger.debug("package: %s version: %r via: %r", name, version_spec, dep)
             item = Package(name, frozenset(extras or [])), []
             yield item
 
-    # async def _fetch_metadata(self, package, version, cache):
-    #     timeout = httpx.Timeout(10.0, connect=10.0)
-    #     http_proxy = os.getenv("http_proxy")
-    #     https_proxy = os.getenv("https_proxy")
-    #     proxies = None
-    #     if http_proxy and https_proxy:
-    #         if http_proxy != https_proxy:
-    #             proxies = {"http://": http_proxy, "https://": https_proxy}
-    #         else:
-    #             proxies = http_proxy
-    #     else:
-    #         proxies = http_proxy or https_proxy
-
-    #     async with AsyncClient(
-    #         proxies=proxies, http2=True, transport=self.transport, timeout=timeout
-    #     ) as client:
-    #         result = await get_metadata(client, package, version, cache)
-    #     return result
-
-
-def fixup_requirement(str_or_req: str | Requirement) -> Requirement:
-    if type(str_or_req) is str:
-        req = Requirement(str_or_req)
-    else:
-        req = str_or_req
-    return normalize_requirement(req)
-
-
-def normalize_requirement(req):
-    marker: str | None = req.marker
-    if marker:
-        marker = normalize_python_specifier(marker)
-
-        sreq, _ = str(req).split(";")
-        sreq = sreq.strip()
-        req = Requirement(f"{sreq}; {marker}")
-        # print(f"XXX: {req}")
-    return req
-
-
-def normalize_python_specifier(marker: str):
-    if " in " in marker:
-        connector = " or "
-        operator = "=="
-        symbol, versions = marker.split(" in ")
-        if symbol.endswith(" not"):
-            connector = " and "
-            operator = "!="
-        assert versions[0] in ("'", '"')
-        assert versions[-1] in ("'", '"')
-        delim = versions[0]
-        versions = [Version(v) for v in versions[1:-1].split()]
-        marker = connector.join(
-            f"{symbol} {operator} {delim}{version}{delim}" for version in versions
-        )
-    return f"({marker})"
-
-
-# start = time.time()
-# from pep440_rs import PreRelease
 def transform(a, v):
     if a == "pre" and type(v) == tuple and len(v) == 2:
         k, i = v
@@ -446,7 +417,7 @@ SAMPLE = [
 @click.option("--quiet", "-q", is_flag=True)
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--index-url", multiple=True)
-@click.option("--python", default=None)
+@click.option("--python", type=click.Path(path_type=str), default=None)
 @click.option("--pre", is_flag=True)
 @click.option("--pip-args")
 @click.option("--requirements", "-r", type=click.File("r"), default=None)
@@ -525,10 +496,11 @@ def main(
         reqs.append(line),
 
     provider = DependencyProvider(index_url, env, allow_pre=pre, spinner=spin)
-
+    provider.exclude(Package("sigopt"), VersionSpecifiers("<=8.6.3"))
     solution = provider.resolve(reqs)
 
     if output:
+        logger.debug("opening %r", output)
         file = open(output, "w")
     else:
         file = sys.stdout
@@ -551,9 +523,11 @@ def main(
             else:
                 print(f"{name}=={solution[p]}", file=sys.stderr)
 
+    file.flush()
     if output:
-        file.flush()
-        file.close()
+       file.close()
+    #breakpoint()
+    sys.exit(0)
 
 
 CAPTURE_MARKERS_SCRIPT = """

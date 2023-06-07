@@ -5,10 +5,12 @@ from zipfile import ZipFile
 
 import requests
 from diskcache import Cache as DCache
-from logzero import logger
+import logging
+from logzero import setup_logger
 from platformdirs import AppDirs
-from pubgrub import MarkerEnvironment, Requirement, Version
+from pubgrub import MarkerEnvironment, Requirement, Version, VersionSpecifiers
 from requests import Response
+from rustine.tools import normalize_python_specifier
 from wheel_filename import ParsedWheelFilename, parse_wheel_filename
 
 from rustine.tools import normalize
@@ -41,8 +43,6 @@ ARCH_TAGS = [
 ]
 
 PLATFORM_TAGS = {
-    "macosx_10_9": "Darwin",
-    "macosx_11_0": "Darwin",
     "linux": "Linux",
     "manylinux1": "Linux",
     "manylinux2014": "Linux",
@@ -50,7 +50,11 @@ PLATFORM_TAGS = {
     "manylinux_2_12": "Linux",
     "manylinux_2_17": "Linux",
     "manylinux2010": "Linux",
+    "macosx_10_9": "Darwin",
     "macosx_10_10": "Darwin",
+    "macosx_10_11": "Darwin",
+    "macosx_10_12": "Darwin",
+    "macosx_11_0": "Darwin",
     "macosx_10_11": "Darwin",
     "macosx_10_14": "Darwin",
     "macosx_10_15": "Darwin",
@@ -59,6 +63,8 @@ PLATFORM_TAGS = {
     "win32": "Windows",
     "any": None,
 }
+logger = setup_logger(name="index")
+logger.setLevel(logging.INFO)
 
 
 def pltag2tuple(tag):
@@ -336,7 +342,7 @@ def get_project_versions(
     cache: DCache | None = None,
     refresh=False,
     no_cache=False,
-) -> list[(Version, str | None)]:
+) -> list[(Version, VersionSpecifiers | None)]:
     json = get_project_info(index_url, name, cache, refresh, no_cache)
     logger.debug("get-project-versions: %s %s", name, index_url)
     wheel_versions = set()
@@ -344,6 +350,13 @@ def get_project_versions(
     for file_meta in json["files"]:
         filename = file_meta["filename"]
         requires_python = file_meta.get("requires-python")
+        if requires_python:
+            requires_python = VersionSpecifiers(
+                normalize_python_specifier(requires_python)
+            )
+        else:
+            requires_python = None
+
         artifact, ext = filter_artifact(filename)
         if not artifact:
             logger.debug("skipping invalid artifact: %s", filename)
@@ -351,17 +364,19 @@ def get_project_versions(
         if ext == ".whl" and wheel:
             wheel = parse_wheel_filename(filename)
             try:
-                wheel_versions.add((Version(wheel.version), requires_python or ""))
+                wheel_versions.add((Version(wheel.version), requires_python))
             except Exception as error:
                 logger.debug("invalid pep 440 version: %s, %s", wheel.version, error)
         elif sdist:
             version = artifact[len(name) + 1 :]
             logger.debug("artifact: %s%s, version: %s", artifact, ext, version)
             try:
-                sdist_versions.add((Version(version), requires_python or ""))
+                sdist_versions.add((Version(version), requires_python))
             except Exception as error:
                 logger.debug("invalid pep 440 version: %s, %s", version, error)
-    versions = sorted(wheel_versions | sdist_versions, reverse=True)
+    versions = sorted(
+        wheel_versions | sdist_versions, key=lambda vr: vr[0], reverse=True
+    )
     return versions
 
 
@@ -382,7 +397,7 @@ def get_sources_for_version(
             if wheel.version == version:
                 wheels.append(file_meta)
         else:
-            logger.debug("non wheel: %s", filename)
+            # logger.debug("non wheel: %s", filename)
             artifact_version = artifact[len(name) + 1 :]
             if artifact_version == version:
                 sdists.append(file_meta)

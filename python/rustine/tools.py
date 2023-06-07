@@ -4,7 +4,7 @@ from typing import BinaryIO, NewType, Optional
 
 import requests
 from logzero import logger
-from pubgrub import Pep508Error, Requirement
+from pubgrub import Pep508Error, Requirement, Version, VersionSpecifiers
 
 MINIMUM_SUPPORTED_PYTHON_MINOR = 7
 
@@ -117,3 +117,57 @@ class RemoteZipFile(BinaryIO):
         data = response.content
         self.pos += read_len
         return data
+
+
+def fixup_requirement(str_or_req: str | Requirement) -> Requirement:
+    if type(str_or_req) is str:
+        req = Requirement(str_or_req)
+    else:
+        req = str_or_req
+    return normalize_requirement(req)
+
+
+def normalize_requirement(req):
+    marker: str | None = req.marker
+    if marker:
+        marker = normalize_python_specifier(marker)
+
+        sreq, _ = str(req).split(";")
+        sreq = sreq.strip()
+        req = Requirement(f"{sreq}; {marker}")
+        # print(f"XXX: {req}")
+    return req
+
+
+def normalize_python_specifier(marker: str):
+    # FIXME: very approximate
+    if " in " in marker:
+        connector = " or "
+        operator = "=="
+        symbol, versions = marker.split(" in ")
+        if symbol.endswith(" not"):
+            connector = " and "
+            operator = "!="
+        assert versions[0] in ("'", '"')
+        assert versions[-1] in ("'", '"')
+        delim = versions[0]
+        versions = versions[1:-1].split()
+        marker = connector.join(
+            f"{symbol} {operator} {delim}{version}{delim}" for version in versions
+        )
+    assert "in " not in marker, marker
+    return f"{marker}"
+
+
+def version_matches(python_version: Version, requires_python: VersionSpecifiers | None):
+    matched = True
+    if isinstance(requires_python, str):
+        raise TypeError("got a string")
+    if requires_python:
+        if not all(vs.contains(python_version) for vs in requires_python):
+            matched = False
+    if not matched:
+        logger.debug(
+            "version-matches: %r, %r -> %s", requires_python, python_version, matched
+        )
+    return matched
