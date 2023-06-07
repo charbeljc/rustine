@@ -50,6 +50,7 @@ PLATFORM_TAGS = {
     "manylinux_2_12": "Linux",
     "manylinux_2_17": "Linux",
     "manylinux2010": "Linux",
+    "musllinux_1_1": "Linux",
     "macosx_10_9": "Darwin",
     "macosx_10_10": "Darwin",
     "macosx_10_11": "Darwin",
