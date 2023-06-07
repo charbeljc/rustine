@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import typing
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 try:
@@ -50,7 +51,7 @@ from rustine.tools import fixup_requirement, normalize, version_matches
 @dataclass(init=False, order=True, unsafe_hash=True)
 class Package:
     name: str
-    extras: frozenset[str] | None = None
+    extras: Optional[frozenset[str]] = None
 
     def __init__(self, spec: str, extras=None):
         if "[" in spec and extras is not None:
@@ -86,9 +87,9 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     source_packages: dict[Package, str]  # url
     versions: dict[Package, list[str]]  # version
     exclusions: dict[Package, VersionSpecifiers]
-    spinner: Spinner | None = None
+    spinner: Optional[Spinner] = None
     iterations: int = 0
-    allow_pre: bool | list[str]
+    allow_pre: Union[bool, list[str]]
     refresh: bool
     no_cache: bool
     debug: bool
@@ -97,8 +98,8 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
     def __init__(
         self,
         index_urls,
-        env: MarkerEnvironment | None = None,
-        allow_pre: bool | list[str] | None = None,
+        env: Optional[MarkerEnvironment] = None,
+        allow_pre: Optional[Union[bool, list[str]]] = None,
         refresh: bool = False,
         no_cache: bool = False,
         debug: bool = False,
@@ -134,11 +135,11 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         self.exclusions = dict()
 
     def add_dependencies(
-        self, package: Package, version: str, requirements: list[Requirement | str]
+        self, package: Package, version: str, requirements: list[Union[str, Requirement]]
     ):
         logger.debug("add-dependencies: (%r, %r) : %r", package, version, requirements)
 
-        def ensure(req: str | Requirement) -> Requirement:
+        def ensure(req: Union[str, Requirement]) -> Requirement:
             if type(req) is str:
                 return Requirement(req)
             else:
@@ -148,14 +149,14 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
             ensure(req) for req in requirements
         ]
 
-    def exclude(self, package: Package, version: str | VersionSpecifiers):
+    def exclude(self, package: Package, version: Union[str, VersionSpecifiers]):
         if isinstance(version, str):
             v = VersionSpecifiers(version)
         else:
             v = version
         self.exclusions[package] = v.to_pubgrub()
 
-    def excluded(self, package: Package, version: str | Version):
+    def excluded(self, package: Package, version: Union[str,Version]):
         if package.name == "sigopt":
             # breakpoint()
             pass
@@ -174,7 +175,7 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
         del self.user_dependencies[(package, version)]
 
-    def resolve(self, dependencies: list[str | Requirement]):
+    def resolve(self, dependencies: list[Union[str,Requirement]]):
         p = Package(".")
         v = "0.0.0"
         self.add_dependencies(p, v, dependencies)
@@ -221,7 +222,7 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
 
         python_version = self.env.python_version.version
 
-        def keep(v: Version, requires_python: VersionSpecifiers | None):
+        def keep(v: Version, requires_python: Optional[VersionSpecifiers]):
             if self.excluded(package, v):
                 ## logger.info("forbidden package version: %s %s", package, v)
                 return False
@@ -351,7 +352,7 @@ class DependencyProvider(AbstractDependencyProvider[Package, str, str]):
         for dep in dependencies:
             yield from self._filter_dependency(package, version, dep)
 
-    def _filter_dependency(self, package: Package, version, dep: str | Requirement):
+    def _filter_dependency(self, package: Package, version, dep: Union[str, Requirement]):
         dep = fixup_requirement(dep)
         if self.debug and self.verbose:
             logger.debug("filtering: %s", dep)
@@ -393,7 +394,7 @@ def transform(a, v):
 VERSION_ATTRS = ["dev", "epoch", "post", "pre", "release"]
 
 
-def vs2tuple(vs: VersionSpecifier | str):
+def vs2tuple(vs: Union[str, VersionSpecifier]):
     if type(vs) is str:
         try:
             vs = VersionSpecifier(vs)

@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Iterator
+from typing import Optional, Iterator
 
 import click
 import tomlkit
@@ -12,7 +12,7 @@ from pep508_rs import Requirement
 
 
 def climb(
-    directory: Path | None = None, boundary: Path | None = None
+    directory: Optional[Path] = None, boundary: Optional[Path] = None
 ) -> Iterator[Path]:
     if not directory:
         directory = Path(os.path.curdir).absolute()
@@ -29,10 +29,10 @@ def climb(
 
 def locate_file(
     filename: str,
-    directory: Path | None = None,
-    boundary: Path | None = None,
+    directory: Optional[Path] = None,
+    boundary: Optional[Path] = None,
     allow_links=False,
-) -> Path | None:
+) -> Optional[Path]:
     for path in climb(directory, boundary):
         probe = path.joinpath(filename)
         if (
@@ -47,11 +47,11 @@ def locate_file(
 
 def locate_dir(
     filename: str,
-    directory: Path | None = None,
-    boundary: Path | None = None,
+    directory: Optional[Path] = None,
+    boundary: Optional[Path] = None,
     allow_links=False,
     climbing=False,
-) -> Path | None:
+) -> Optional[Path]:
     for path in climb(directory, boundary):
         probe = path.joinpath(filename)
         if (

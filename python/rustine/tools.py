@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import BinaryIO, NewType, Optional
+from typing import BinaryIO, NewType, Optional, Union
 
 import requests
 from logzero import logger
@@ -119,7 +119,7 @@ class RemoteZipFile(BinaryIO):
         return data
 
 
-def fixup_requirement(str_or_req: str | Requirement) -> Requirement:
+def fixup_requirement(str_or_req: Union[str,Requirement]) -> Requirement:
     if type(str_or_req) is str:
         req = Requirement(str_or_req)
     else:
@@ -128,7 +128,7 @@ def fixup_requirement(str_or_req: str | Requirement) -> Requirement:
 
 
 def normalize_requirement(req):
-    marker: str | None = req.marker
+    marker: Optional[str] = req.marker
     if marker:
         marker = normalize_python_specifier(marker)
 
@@ -159,7 +159,7 @@ def normalize_python_specifier(marker: str):
     return f"{marker}"
 
 
-def version_matches(python_version: Version, requires_python: VersionSpecifiers | None):
+def version_matches(python_version: Version, requires_python: Optional[VersionSpecifiers]):
     matched = True
     if isinstance(requires_python, str):
         raise TypeError("got a string")

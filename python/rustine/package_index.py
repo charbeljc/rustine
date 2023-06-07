@@ -2,7 +2,7 @@ import io
 import tarfile
 from pathlib import Path
 from zipfile import ZipFile
-
+from typing import Optional
 import requests
 from diskcache import Cache as DCache
 import logging
@@ -223,7 +223,7 @@ def get_modified_key(headers):
         return None, False
 
 
-def get_pypi_json(url, cache: DCache | None = None, refresh=False, no_cache=False):
+def get_pypi_json(url, cache: Optional[DCache] = None, refresh=False, no_cache=False):
     logger.debug(
         "get-pypi-json: %s, cache: %s, refresh: %s, no_cache: %s",
         url,
@@ -283,13 +283,13 @@ def get_pypi_json(url, cache: DCache | None = None, refresh=False, no_cache=Fals
     return data
 
 
-def get_project_list(url, cache: DCache | None = None, refresh=False, no_cache=False):
+def get_project_list(url, cache: Optional[DCache] = None, refresh=False, no_cache=False):
     json = get_pypi_json(url, cache, refresh, no_cache)
     return [normalize(project["name"]) for project in json["projects"]]
 
 
 def get_project_info(
-    index_url, name, cache: DCache | None = None, refresh=False, no_cache=False
+    index_url, name, cache: Optional[DCache] = None, refresh=False, no_cache=False
 ):
     name = normalize(name)
     index_url = index_url[:-1] if index_url[-1] == "/" else index_url
@@ -299,7 +299,7 @@ def get_project_info(
 
 
 def get_version_info(
-    index_url, name, version, cache: DCache | None = None, refresh=False, no_cache=False
+    index_url, name, version, cache: Optional[DCache] = None, refresh=False, no_cache=False
 ):
     name = normalize(name)
     index_url = index_url[:-1] if index_url[-1] == "/" else index_url
@@ -319,7 +319,7 @@ def get_version_info(
 
 
 def get_project_version_dependencies(
-    index_url, name, version, cache: DCache | None = None, refresh=False, no_cache=False
+    index_url, name, version, cache: Optional[DCache] = None, refresh=False, no_cache=False
 ):
     json = get_version_info(index_url, name, version, cache, refresh, no_cache)
     return json["info"]["requires_dist"] or []
@@ -340,10 +340,10 @@ def get_project_versions(
     name,
     wheel=True,
     sdist=True,
-    cache: DCache | None = None,
+    cache: Optional[DCache] = None,
     refresh=False,
     no_cache=False,
-) -> list[(Version, VersionSpecifiers | None)]:
+) -> list[(Version, Optional[VersionSpecifiers])]:
     json = get_project_info(index_url, name, cache, refresh, no_cache)
     logger.debug("get-project-versions: %s %s", name, index_url)
     wheel_versions = set()
@@ -382,7 +382,7 @@ def get_project_versions(
 
 
 def get_sources_for_version(
-    index_url, name, version, cache: DCache | None = None, refresh=False, no_cache=False
+    index_url, name, version, cache: Optional[DCache] = None, refresh=False, no_cache=False
 ):
     json = get_project_info(index_url, name, cache, refresh, no_cache)
     wheels = []
@@ -410,7 +410,7 @@ def choose_sdist_for_version(
     name,
     version,
     env: MarkerEnvironment = None,
-    cache: DCache | None = None,
+    cache: Optional[DCache] = None,
     refresh=False,
     no_cache=False,
 ):
@@ -435,7 +435,7 @@ def choose_wheel_for_version(
     name,
     version,
     env: MarkerEnvironment = None,
-    cache: DCache | None = None,
+    cache: Optional[DCache] = None,
     refresh=False,
     no_cache=False,
 ):
